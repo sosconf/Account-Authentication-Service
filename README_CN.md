@@ -56,16 +56,14 @@
 [![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.X-brightgreen)](https://www.openldap.org/doc/admin24/)
 [![CAS](https://img.shields.io/badge/CAS-6.0.X-orange)](https://apereo.github.io/cas/6.0.x/)
 
-```diff
-! 本文档将介绍基于 CAS 实现的单点登录，帮助新朋友们（填坑者）快速了解项目进度并迅速开发。
-```
+> 本文档将介绍基于 CAS 实现的单点登录，帮助新朋友们（填坑者）快速了解项目进度并迅速开发。
+
 
 最后一次更新于 `2019/08/31`
 
 ## CentOS 下 OpenLDAP 安装及配置方法
-```diff
-- 为了方便以下配置，请以 root 权限进行以下配置操作
-```
+
+> 为了方便以下配置，请以 root 权限进行以下配置操作
 
 实现 LDAP 服务我们需要至少 **4** 台服务器（主服务器和从服务器各两台）以防某台宕机服务瘫痪:
 
