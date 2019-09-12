@@ -360,7 +360,7 @@ audit2allow -a -M ldap_rule
 semodule -i ldap_rule.pp
 ```
 检查规则是否加载成功:
-```
+```console
 [root@VM_0_15_centos ~]# semodule -l | grep ldap_rule
 ldap_rule       1.0
 ```
@@ -745,7 +745,7 @@ echo "(你的云服务器公网IP)  Apache" >> /etc/hosts
 ```
 #### 配置 Apache 服务
 检查是否安装了 Apache httpd 和 PHP，不然将一错到底。
-```
+```console
 [root@VM_0_15_centos ~]# rpm -qa | grep httpd # 查看是否安装了http包
 httpd-2.4.6-89.el7.centos.1.x86_64
 httpd-tools-2.4.6-89.el7.centos.1.x86_64
@@ -766,7 +766,7 @@ yum -y install httpd*
 systemctl start httpd.service
 ```
 检查 80 端口的占用情况。如果发现启动不成功，可以检查一下 80 端口是否被其他服务占用，或者配置文件有无语法问题。实在找不到的原因请查看日志。
-```
+```console
 [root@VM_0_15_centos ~]# lsof -i:80 # 这种情况是正常监听
 COMMAND  PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 httpd   6045   root    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
