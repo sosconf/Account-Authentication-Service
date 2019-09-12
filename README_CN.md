@@ -1,83 +1,36 @@
-目录
+**Contents**
 =================
-* [授权认证账户系统开发文档](#授权认证账户系统开发文档)
-  * [CentOS 下 OpenLDAP 安装及配置方法](#centos-下-openldap-安装及配置方法)
-     * [OpenLDAP 目录树示意图](#openldap-目录树示意图)
-     * [OpenLDAP 用户信息收集](#openldap-用户信息收集)
-     * [LDAP 同步条件](#ldap-同步条件)
-     * [脚本执行文件](#脚本执行文件)
-     * [防火墙规则](#防火墙规则)
-        * [入战规则](#入战规则)
-        * [出站规则](#出站规则)
-        * [SELinux 设置](#selinux-设置)
-     * [LDAP 基础配置](#ldap-基础配置)
-        * [第一步 安装 LDAP](#第一步-安装-ldap)
-        * [第二步 配置 syslog 记录 LDAP 服务](#第二步-配置-syslog-记录-ldap-服务)
-        * [第三步 配置管理员密码](#第三步-配置管理员密码)
-        * [第四步 导入 schema](#第四步-导入-schema)
-        * [第五步 配置 LDAP 的顶级域](#第五步-配置-ldap-的顶级域)
-     * [多主配置](#多主配置)
-        * [第一步 配置 syncprov 模块](#第一步-配置-syncprov-模块)
-        * [第二步 启用镜像配置](#第二步-启用镜像配置)
-        * [第三步 启用 syncprov 模块](#第三步-启用-syncprov-模块)
-        * [第四步 启用镜像数据库](#第四步-启用镜像数据库)
-        * [第五步 复制组织结构](#第五步-复制组织结构)
-        * [第六步 创建次级管理员](#第六步-创建次级管理员)
-     * [主从配置](#主从配置)
-     * [测试](#测试)
-     * [phpLDAPadmin 配置](#phpldapadmin-配置)
-        * [绑定公网 IP 和主机名](#绑定公网-ip-和主机名)
-        * [配置 Apache 服务](#配置-apache-服务)
-        * [安装 phpLDAPadmin](#安装-phpldapadmin)
-  * [Ubuntu 下 CAS 安装及配置方法](#ubuntu-下-cas-安装及配置方法)
-     * [Apache Tomcat 9 配置](#apache-tomcat-9-配置)
-        * [第一步 安装 OpenJDK](#第一步-安装-openjdk)
-        * [第二步 创建 Tomcat 用户](#第二步-创建-tomcat-用户)
-        * [第三步 安装 Tomcat](#第三步-安装-tomcat)
-        * [第四步 创建系统单元文件](#第四步-创建系统单元文件)
-     * [Nginx 配置](#nginx-配置)
-        * [第一步 创建 Nginx 运行账户](#第一步-创建-nginx-运行账户)
-        * [第二步 安装依赖库](#第二步-安装依赖库)
-           * [GCC 库](#gcc-库)
-           * [PCRE 库](#pcre-库)
-           * [zlib 库](#zlib-库)
-           * [OpenSSL 库](#openssl-库)
-           * [sysv-rc-conf 管理包](#sysv-rc-conf-管理包)
-        * [第三步 下载与解压 Nginx](#第三步-下载与解压-nginx)
-        * [第四步 配置 HTTP 服务](#第四步-配置-http-服务)
-        * [第五步 安装 Nginx](#第五步-安装-nginx)
-        * [第六步 配置 Nginx](#第六步-配置-nginx)
-  * [参考链接](#参考链接)
-     * [关于 OpenLDAP](#关于-openldap)
-     * [关于 CAS](#关于-cas)
+[TOC]
 
-# 授权认证账户系统开发文档
+# AAA System Development Documentation
+
 [![LICENSE](https://img.shields.io/badge/license-AGPLv3-blue)](https://github.com/Hephaest/Simple-Java-Caculator/blob/master/LICENSE)
 [![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.X-brightgreen)](https://www.openldap.org/doc/admin24/)
 [![CAS](https://img.shields.io/badge/CAS-6.0.X-orange)](https://apereo.github.io/cas/6.0.x/)
 
-{+ 本文档将介绍基于 CAS 实现的单点登录，帮助新朋友们（填坑者）快速了解项目进度并迅速开发。本文档仅供内部人员传看。+}
+{+ This document describes the single sign-on based on CAS，helps new friends to quickly understand the project and do rapid development ．PS：for tech members only．+}
 
-最后一次更新于 `2019/08/31`
+Latest update: `2019/08/31`
 
-## CentOS 下 OpenLDAP 安装及配置方法
-{- 为了方便以下配置，请以 root 权限进行以下配置操作 -}
+## Install OpenLDAP In CentOS
 
-实现 LDAP 服务我们需要至少 **4** 台服务器（主服务器和从服务器各两台）以防某台宕机服务瘫痪:
+{-To facilitate the following configuration ，do the following configuration with **root** authority  -}
 
-- 有条件的话主服务器和所属的从服务器最好在同一内网内，提高访问速度。
-- 主服务器最好位于不同区，免受部分地域服务器瘫痪的影响。
+We need at least 4 servers to implement the LDAP service（2 Primary Servers and 2 Secondary Servers ）,to prevent a server from going down and disabling the service:
+
+- If possible，To improve the access speed, the Primary Servers and the Secondary Servers are best  served on the same intranet .
+- Primary servers are best located in different areas, free from the impact of server paralysis in some areas.
 
 <div align="center">
 <table class="tg">
   <tr align="center">
-    <th class="tg-0pky" rowspan="2">角色</th>
-    <th class="tg-0lax" colspan="2">主IP地址</th>
-    <th class="tg-0pky" rowspan="2">操作系统</th>
+    <th class="tg-0pky" rowspan="2">role</th>
+    <th class="tg-0lax" colspan="2">Primary IP Address</th>
+    <th class="tg-0pky" rowspan="2">OS</th>
   </tr>
   <tr align="center">
-    <td class="tg-0lax">公</td>
-    <td class="tg-0pky">内</td>
+    <td class="tg-0lax">Public IP</td>
+    <td class="tg-0pky">Intranet IP</td>
   </tr>
   <tr>
     <td class="tg-0pky">master01.hexang.org</td>
@@ -106,306 +59,320 @@
 </table>
 </div>
 
+
+
 <div align="center">
 <table class="tg">
   <tr>
-    <th class="tg-dvpl">LDAP 管理员</th>
-    <th class="tg-c3ow">权限</th>
-    <th class="tg-baqh">密码(暂定)</th>
+    <th class="tg-dvpl">LDAP Administrator</th>
+    <th class="tg-c3ow">Permission</th>
+    <th class="tg-baqh">Password(provisional)</th>
   </tr>
   <tr>
-    <td class="tg-dvpl">主管理者</td>
-    <td class="tg-c3ow">可读可写</td>
+    <td class="tg-dvpl">Main manager</td>
+    <td class="tg-c3ow">readable, writable</td>
     <td class="tg-baqh">w8JFUEWjAsHBwLjjcQrCYiPP</td>
   </tr>
   <tr>
-    <td class="tg-dvpl">次级管理者</td>
-    <td class="tg-c3ow">只读</td>
+    <td class="tg-dvpl">Secondary manager</td>
+    <td class="tg-c3ow">readable</td>
     <td class="tg-baqh">of2Pwxqt9Gc7TH8e</td>
   </tr>
 </table>
 </div>
 
-### OpenLDAP 目录树示意图
-当前的组织结构比较简单，后期可能会为每一个域名级别的 ou 创建自己的管理团队以便管理和隐私保护:
+### OpenLDAP Tree Structure
+
+The current organizational structure is relatively simple，each domain name level ou may later create its own management team for management and privacy protection:
+
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
 
-### OpenLDAP 用户信息收集
-用户信息的收集使用的是 `inetorgperson.ldif` 的 schema，我们将会收集以下数据:
+### OpenLADP User Information Collection
+
+We use the `schema` in `inetorgperson.ldif`  to collect user information, and we can collect the following data:
 
 <div align="center">
 <table class="tg">
   <tr>
-    <th class="tg-0pky">属性名</th>
-    <th class="tg-0pky">格式</th>
-    <th class="tg-0pky">意义</th>
+    <th class="tg-0pky">The property name</th>
+    <th class="tg-0pky">Format</th>
+    <th class="tg-0pky">Meaning</th>
   </tr>
   <tr>
     <td class="tg-0pky">uid</td>
-    <td class="tg-0pky">字符型</td>
-    <td class="tg-0pky">用户名</td>
+    <td class="tg-0pky">char</td>
+    <td class="tg-0pky">User name</td>
   </tr>
   <tr>
     <td class="tg-0pky">cn</td>
-    <td class="tg-0pky">字符型</td>
-    <td class="tg-0pky">用户真实全名</td>
+    <td class="tg-0pky">char</td>
+    <td class="tg-0pky">User's full name</td>
   </tr>
   <tr>
     <td class="tg-0pky">jpegPhoto</td>
-    <td class="tg-0pky">二进制</td>
-    <td class="tg-0pky">用户头像</td>
+    <td class="tg-0pky">binary</td>
+    <td class="tg-0pky">Profile photo</td>
   </tr>
   <tr>
     <td class="tg-0pky">mail</td>
-    <td class="tg-0pky">字符型</td>
-    <td class="tg-0pky">用于验证的用户邮箱</td>
+    <td class="tg-0pky">char</td>
+    <td class="tg-0pky">User's mailbox for authentication</td>
   </tr>
     <tr>
     <td class="tg-0pky">preferredLanguage</td>
-    <td class="tg-0pky">字符型</td>
-    <td class="tg-0pky">语言偏好</td>
+    <td class="tg-0pky">char</td>
+    <td class="tg-0pky">Preferred Language</td>
   </tr>
 </table>
 </div>
 
-### LDAP 同步条件
-OpenLDAP 的同步模式需要满足以下 **6** 个条件:
-1. **服务器之间时间同步**
+### LDAP Synchronous
 
-    安装 NTP
-    ```
+OpenLDAP's synchronization schema needs to satisfy the following **6** conditions:
+
+1. **Time synchronization between servers**
+
+    Install NTP
+    ```shell
     yum -y install ntp
     ```
-    因为服务器可能在国外，本机时间会与上源时间相差甚远，因此需要先执行 `ntpdate` 获得时间初始值:
-    ```
+    To avoid errors between local time and server time, we should do  `ntpdate` first.
+    
+    ```shell
     ntpdate ntp1.aliyun.com
     ```
-    接着自定义 NTP 服务
-    ```
+    Then customize the NTP service
+    
+    ```shell
     vi /etc/ntp.conf
     ```
-    把 `server ntp 服务器 iburst` 注释掉，再后面新添加一行 NTP 服务器信息:
+    Comment out  `iburst`  in `server ntp` ，add a new line of NTP server information behind:
+    
+    ```shell
+    server ntp1.aliyun.com iburst  # we use aliyun public network NTP server
     ```
-    server ntp1.aliyun.com iburst # 这里我们使用的是阿里云公网 NTP 服务器。
-    ```
-    保存更改后启动 NTP 服务:
-    ```
+    Save the changes and start the NTP service:
+    ```shell
     systemctl start ntpd.service
     ```
-    接着配置重启自执行 NTP 服务:
-    ```
+    Then configure the restart self-executing NTP service:
+    ```shell
     systemctl enable ntpd.service
     ```
-    检查操作是否生效:
-    ```
+    Check whether the operation is effective:
+    ```shell
     ntpstat
     ```
-2. **OpenLDAP 版本一致**
-
-    下方使用的版本是`2.4.4`。    
-
-3. **OpenLDAP 节点之间的域名可以相互解析**
-
-    暂未设置。
     
-4. **主从，主主同步的初始配置完全相同(包括目录树信息)**
+2. **Consistency of OpenLDAP versions**
 
-    将下方配置复制粘贴即可。
+    We use `2.4.4` version.
+
+3. **Domain names shoule be resolved between every two OpenLDAP nodes**
+
+    Not set yet.
     
-5. **服务器之间数据条目相同**
+4. **The initial configuration of master-slave and master-master synchronization is identical(Includes the directory tree structure)**
 
-    只要在配置之后添加数据即可。
+    Copy and paste the following script.
     
-6. **Schema 相同**
+5. **Data entries are the same across servers**
 
-    将下方配置复制粘贴即可。
+    Just add the data after configuration.
+    
+6. **Schema is the same**
 
-### 脚本执行文件
-已将可执行 Shell 脚本 上传到[这里](https://hexang.org/sosconf/tech-team/ldap-account-server/tree/master/shell%20scripts)。可通过执行脚本一键配置:<br>
-所有服务器都必须执行第 **1** 步。
-```
-# 先同步时间并开启 SELinux
+    Copy and paste the following script.
+
+### Script execution file
+I've uploaded an executable Shell script [here](https://hexang.org/sosconf/tech-team/ldap-account-server/tree/master/shell%20scripts). You can easily configure it by executing the scripts:
+All servers should perform Step 1:
+
+```shell
+# Synchro time first, then activate SELinux
 chmod +x NTP_and_SELinux.sh
-./NTP_and_SELinux.sh 第一台主服务器IP 第二台主服务器IP
+./NTP_and_SELinux.sh 'the first primary server IP' 'the second primary server IP'
 ```
-第 **2** 步作针对两台主 LDAP 服务器:
-```
+Step 2: Settings for two master LDAP servers:
+```shell
 chmod +x Config_Replication.sh
-./Config_Replication.sh 管理员密码 服务器序号
+./Config_Replication.sh 'Administrator password' 'Server serial number'
 ```
-第 **3** 步仅需在其中任意一台主服务器操作即可:
-```
+Step 3: Simply operate on any of the primary servers:
+```shell
 chmod +x Database_Replication.sh
-./Database_Replication.sh 次级管理员密码
+./Database_Replication.sh 'Sub-administrator password'
 ```
-第 **4** 步作针对两台从 LDAP 服务器:
-```
+Step4: Settings for two slave LDAP servers:
+```shell
 chmod +x Slave_Configuration.sh
-./Slave_Configuration.sh 对应的主服务器IP 管理员密码 次级管理员密码
+./Slave_Configuration.sh 'corresponding primary server IP' 'Administrator password' 'Sub-administrator password'
 ```
 
-### 防火墙规则
-    
-#### 入战规则
+### Firewall Rules
+
+#### Inbound Rules
 
 <div align="center">
 <table class="tg">
   <tr>
-    <th class="tg-0pky">来源</th>
-    <th class="tg-0pky">协议端口</th>
-    <th class="tg-0pky">策略</th>
-    <th class="tg-0pky">备注</th>
+    <th class="tg-0pky">Source</th>
+    <th class="tg-0pky">Protocol port</th>
+    <th class="tg-0pky">Strategy</th>
+    <th class="tg-0pky">Comment</th>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:22</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">放通 Linux SSH 登录</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Allow Linux SSH login</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">ICMP</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">支持 Ping 服务</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Support Ping services</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:80</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">放通 Web 服务 HTTP(80)</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Allow Web services HTTP(80)</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:443</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">放通 Web 服务 HTTP(443)</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Allow Web services HTTP(443)</td>
   </tr>
     <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:389</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">放通 LDAP 服务</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Allow LDAP services</td>
   </tr>
   </tr>
     <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">UDP:123</td>
-    <td class="tg-0pky">允许</td>
-    <td class="tg-0pky">放通 NTP 服务</td>
+    <td class="tg-0pky">permit</td>
+    <td class="tg-0pky">Allow NTP services</td>
   </tr>
 </table>
 </div>
 
-#### 出站规则
+
+#### Outbound Rules
 
 <div align="center">
 <table class="tg">
   <tr align="center">
-    <th class="tg-0pky">来源</th>
-    <th class="tg-0pky">协议端口</th>
-    <th class="tg-0pky">策略</th>
-    <th class="tg-0pky">备注</th>
+    <th class="tg-0pky">Source</th>
+    <th class="tg-0pky">Protocol port</th>
+    <th class="tg-0pky">Strategy</th>
+    <th class="tg-0pky">Comment</th>
   </tr>
   <tr align="center">
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">ALL</td>
-    <td class="tg-0pky">允许</td>
+    <td class="tg-0pky">permit</td>
     <td class="tg-0pky">-</td>
   </tr>
 
 </table>
 </div>
 
-#### SELinux 设置
-开启 SELinux:
-```
+#### SELinux Setting
+Activate SELinux:
+```shell
 sed -i '7s/^.*$/SELINUX=enforcing/' /etc/selinux/config
 ```
-重启服务器使 SELinux 配置生效。
-```
+Restart the server to enable the SELinux configuration.
+```shell
 systemctl reboot
 ```
-### LDAP 基础配置
-#### 第一步 安装 LDAP
-全部装上, 免得有遗漏。
-```
-# migrationtools 用于把系统用户和组迁移到ldap。
+### LDAP Basic Configuration
+#### Step1 install LDAP
+Install all the relevant packages so as not to miss anything.
+```shell
+# migrationtools --Used to migrate system users and groups to LDAP.
 yum install -y openldap openldap-* migrationtools policycoreutils-python
 ```
-BerkeleyDB 配置, 并授权给 LDAP 用户。
+BerkeleyDB configuration, and licensed to LDAP users。
+```shell
+cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG # copy
+chown ldap:ldap /var/lib/ldap/DB_CONFIG # Authorization
 ```
-cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG # 复制
-chown ldap:ldap /var/lib/ldap/DB_CONFIG # 授权
-```
-开启 LDAP 服务。
-```
+Activate LDAP server.
+```shell
 systemctl enable slapd
 ```
-接着我们尝试运行 LDAP 服务:
-```
+Let's try to run the LDAP service:
+```shell
 systemctl start slapd
 ```
-这时候会生成错误信息，运行下方指令获取启动失败的原因:
-```
+Error messages will be generated at this time，run the following command to get the reason for the startup failure:
+```shell
 audit2allow -al
 ```
-我们将为 LDAP 单独创建一条规则:
-```
+Create a separate rule for LDAP:
+```shell
 audit2allow -a -M ldap_rule
 ```
-加载这条规则:
-```
+Activate this rule:
+```shell
 semodule -i ldap_rule.pp
 ```
-检查规则是否加载成功:
-```
+Check if the rule was loaded successfully:
+```shell
 [root@VM_0_15_centos ~]# semodule -l | grep ldap_rule
 ldap_rule       1.0
 ```
-重新启动 LDAP 服务:
-```
+Restart LDAP service:
+```shell
 systemctl start slapd
 ```
-检查 LDAP 运行状态, 标绿说明运行正常:
-```
+Check the running status of LDAP, the green mark indicates normal operation:
+```shell
 systemctl status slapd
 ```
-查看端口使用情况, 默认情况下占用 389 端口：
-```
+Check port usage ;By default, port 389 is occupied：
+```shell
 netstat -tlnp | grep slapd
 ```
-#### 第二步 配置 syslog 记录 LDAP 服务
-首先创建日志，并对文件进行授权:
-```
+#### Step2 Configure the syslog to log LDAP service
+First create the log，then authorize files:
+```shell
 touch /var/log/slapd.log
 chown -R ldap. /var/log/slapd.log
 ```
-授权后追加到系统日志的配置里
-```
+Appending to the configuration of the system log after authorization
+```shell
 echo "local4.* /var/log/slapd.log" >> /etc/rsyslog.conf
 ```
-并重启系统日志程序, 使其生效:
-```
+Restart the system logger to take effect:
+```shell
 systemctl restart rsyslog
 ```
-接着更新 LDAP 日志的级别。首先创建中间文件:
-```
+Next, update the level of the LDAP log. First, create the intermediate file:
+
+```shell
 vim loglevel.ldif
 ```
-把下面这段拷贝复制到文件里
-```
+Copy the following lines to the file:
+```shell
 dn: cn=config
 changetype: modify
 add: olcLogLevel
-# 设置日志级别。296级别是有256(日志连接/操作/结果), 32(搜索过滤器处理),8(连接管理)累加而来的。
+# Set the log level. level 296 is the sum of 256(Log connection/operation/result), 32(Search filter processing) and 8(Connection management).
 olcLogLevel: 296
 ```
-把日志功能添加到主配置文件里:
-```
+Add logging to the main configuration file:
+```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f loglevel.ldif
 ```
-除此之外最好对日志进行切分, 便于错误排查:
-```
+In addition, it is better to shard the log to facilitate error checking:
+```shell
 vi /etc/logrotate.d/ldap
 ===========================================================
 /var/log/slapd.log {
@@ -422,38 +389,38 @@ vi /etc/logrotate.d/ldap
         endscript
 }
 ```
-最后查看当前日志配置:
-```
+Check the current log configuration:
+```shell
 [root@VM_0_15_centos ~]# cat /etc/openldap/slapd.d/cn\=config.ldif |grep olcLogLevel
 olcLogLevel: 296
 ```
-#### 第三步 配置管理员密码
-```
-touch chrootpw.ldif # 创建文件
+#### Step3 Configure Administrator Password
+```shell
+touch chrootpw.ldif # Create a file
 echo "dn: olcDatabase={0}config,cn=config" >> chrootpw.ldif 
-echo "changetype: modify" >> chrootpw.ldif # 指定修改类型
-echo "add: olcRootPW" >> chrootpw.ldif # 添加 olcRootPW 配置项
-slappasswd -s w8JFUEWjAsHBwLjjcQrCYiPP | sed -e "s#{SSHA}#olcRootPW: {SSHA}#g" >> chrootpw.ldif # 追加密文密码。
+echo "changetype: modify" >> chrootpw.ldif # Specify modification type
+echo "add: olcRootPW" >> chrootpw.ldif # Add the olcRootPW configuration item
+slappasswd -s w8JFUEWjAsHBwLjjcQrCYiPP | sed -e "s#{SSHA}#olcRootPW: {SSHA}#g" >> chrootpw.ldif # Append ciphertext password
 ```
-执行修改 LDAP 配置命令:
-```
+Execute the LDAP Modification Configuration Command:
+```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f chrootpw.ldif
 ```
-#### 第四步 导入 schema
-Schema 在 /etc/openldap/schema/ 目录里，我这边写了一个执行导入所有 schema 的脚本。
-```
+#### Step4 Import Schema
+The Schema is in this path: /etc/openldap/ Schema/，I have written a script that can import all of the schemas
+```shell
 vim import_schema.sh
 ```
-把下面这段拷贝复制到文件里。
-```
+Copy the following lines to the file.
+```shell
 all_files='ls /etc/openldap/schema/*.ldif'
 for file in $all_files
 do
   ldapadd -Y EXTERNAL -H ldapi:/// -f $file
 done
 ```
-#### 第五步 配置 LDAP 的顶级域
-```
+#### Step5 Configure the top-level domain for LDAP
+```shell
 vim changedomain.ldif
 ===========================================================
 dn: olcDatabase={1}monitor,cn=config
@@ -474,17 +441,17 @@ olcRootDN: cn=admin,dc=hexang,dc=org
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 replace: olcRootPW
-olcRootPW: # 在第二步生成的密码，可通过 vim chrootpw.ldif 查看。
+olcRootPW: # The password generated in step 2，It can be viewed by 'vim chrootpw.ldif'
 ```
-执行修改命令
-```
+Execute modify command:
+```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f changedomain.ldif
 ```
-### 多主配置
-所有主服务器都必须执行第 **1** 步和第 **2** 步:
+### Multi master Configuration
+All primary servers must perform step **1** and step **2**:
 
-#### 第一步 配置 syncprov 模块
-```
+#### Step1 Configure the Syncprov module
+```shell
 vi mod_syncprov.ldif
 ===========================================================
 dn: cn=module,cn=config
@@ -493,28 +460,31 @@ cn: module
 olcModulePath: /usr/lib64/openldap
 olcModuleLoad: syncprov.la
 ```
-在 LDAP 服务器上添加配置:
-```
+Add configuration on LDAP server:
+```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f mod_syncprov.ldif
 ```
-#### 第二步 启用镜像配置
-接下来这一步请注意正在配置的是哪一台主服务器:
+#### Step2 Enable mirror Configuration
+In this next step please notice which primary server is being configured:
 
-olcServerID 写主服务器对应的下标（1或2）。
-```
+olcServerID : Subscript corresponding to the primary server (**1** or **2**).
+```shell
 vi master.ldif
 ===========================================================
 dn: cn=config
 changetype: modify
 add: olcServerID
-olcServerID: 1 或 2
+olcServerID: 1 or 2
 ```
-在 LDAP 服务器上更改配置:
-```
+Change configuration on the LDAP server:
+```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f master.ldif
 ```
-配置镜像:
-```
+Configuration mirror:
+
+PS:You need to fill in the "Administrator's clear-text password" 
+
+```shell
 vi configrep.ldif
 ===========================================================
 dn: cn=config
@@ -533,21 +503,21 @@ dn: olcDatabase={0}config,cn=config
 changetype: modify
 add: olcSyncRepl
 olcSyncRepl: rid=001 provider=ldap://master01.hexang.org binddn="cn=config"
-  bindmethod=simple credentials=管理员明文密码 searchbase="cn=config"
+  bindmethod=simple credentials= "Administrator's clear-text password"  searchbase="cn=config"
   type=refreshAndPersist retry="5 5 300 5" timeout=1
 olcSyncRepl: rid=002 provider=ldap://master02.hexang.org binddn="cn=config"
-  bindmethod=simple credentials管理员明文密码= searchbase="cn=config"
+  bindmethod=simple credentials="Administrator's clear-text password" searchbase="cn=config"
   type=refreshAndPersist retry="5 5 300 5" timeout=1
 -
 add: olcMirrorMode
 olcMirrorMode: TRUE
 ```
-在 LDAP 服务器上更改配置:
-```
+Change the configuration on the LDAP server:
+```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f configrep.ldif
 ```
-#### 第三步 启用 syncprov 模块
-```
+#### Step3 Enable syncprov module
+```shell
 vi syncprov.ldif
 ===========================================================
 dn: olcOverlay=syncprov,olcDatabase={2}hdb,cn=config
@@ -556,12 +526,12 @@ objectClass: olcSyncProvConfig
 olcOverlay: syncprov
 olcSpSessionLog: 100
 ```
-在 LDAP 服务器上添加配置:
-```
+Add configuration on LDAP server:
+```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f syncprov.ldif
 ```
-#### 第四步 启用镜像数据库
-```
+#### Step4 Enabling Mirror Database
+```shell
 vi olcdatabasehdb.ldif
 ===========================================================
 dn: olcDatabase={1}monitor,cn=config
@@ -578,14 +548,14 @@ replace: olcRootDN
 olcRootDN: cn=admin,dc=hexang,dc=org
 -
 replace: olcRootPW
-olcRootPW: 管理员密码
+olcRootPW: 'Administrator password'
 -
 add: olcSyncRepl
 olcSyncRepl: rid=003 provider=ldap://master01.hexang.org binddn="cn=admin,dc=hexang,dc=org" bindmethod=simple
-  credentials=次级管理员密码 searchbase="dc=hexang,dc=org" type=refreshAndPersist
+  credentials='Secondary Administrator Password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
   interval=00:00:05:00 retry="5 5 300 5" timeout=1
 olcSyncRepl: rid=004 provider=ldap://master02.hexang.org binddn="cn=admin,dc=hexang,dc=org" bindmethod=simple
-  credentials=次级管理员密码 searchbase="dc=hexang,dc=org" type=refreshAndPersist
+  credentials='Secondary Administrator Password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
   interval=00:00:05:00 retry="5 5 300 5" timeout=1
 -
 add: olcDbIndex
@@ -597,15 +567,15 @@ olcDbIndex: entryCSN  eq
 add: olcMirrorMode
 olcMirrorMode: TRUE
 ```
-在 LDAP 服务器上添加配置:
-```
+Add configuration on the LDAP server:
+```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f olcdatabasehdb.ldif
 ```
-#### 第五步 复制组织结构
-根据[目录树示意图](#目录树示意图)设定目录结构。<br>
+#### Step5 Clone the Sturcture
+Set the directory Structure according to [OpenLDAP Tree Structure](#OpenLDAP Tree Structure).<br>
 
-这一步仅需在其中任意一台主服务器操作即可:
-```
+This step can be performed on any primary server:
+```shell
 vim organisation.ldif
 ===========================================================
 dn: dc=hexang,dc=org
@@ -652,13 +622,13 @@ dn: ou=accounts,ou=sosconf.org,dc=hexang,dc=org
 objectClass: organizationalUnit
 ou: accounts
 ```
-执行修改命令
-```
+Execute modify command:
+```shell
 ldapadd -x -D cn=admin,dc=hexang,dc=org -W -f organisation.ldif
 ```
-#### 第六步 创建次级管理员
-考虑到安全性，我们需要在主服务器上创建一个次级管理，只有读的权限:
-```
+#### Step6 Create Sub-Administrator
+Considering security，We need to create a read-only secondary management on the primary server:
+```shell
 vi rpuser.ldif
 ===========================================================
 dn: uid=rpuser,dc=hexang,dc=org
@@ -666,15 +636,16 @@ objectClass: simpleSecurityObject
 objectclass: account
 uid: rpuser
 description: Replication  User
-userPassword: 次级管理员密码
+userPassword: 'Secondary Administrator Password'
 ```
-执行添加命令
+Execute add command:
+```shell
+ldapadd -x -D cn=admin,dc=hexang,dc=org -w 'Administrator password' -f rpuser.ldif
 ```
-ldapadd -x -D cn=admin,dc=hexang,dc=org -w 管理员密码 -f rpuser.ldif
-```
-### 主从配置
-主从配置需要注意所属主服务器的 IP 地址:
-```
+### Master -Slave Configuration
+
+PS: Attention the IP address of the primary server:
+```shell
 vi syncrepl.ldif
 ===========================================================
 dn: olcDatabase={2}hdb,cn=config
@@ -684,7 +655,7 @@ olcSyncRepl: rid=001
   provider=ldap://IP:389/
   bindmethod=simple
   binddn="cn=admin,dc=hexang,dc=org"
-  credentials=管理员密码
+  credentials='Administrator password'
   searchbase="dc=hexang,dc=org"
   scope=sub
   schemachecking=on
@@ -692,12 +663,12 @@ olcSyncRepl: rid=001
   retry="30 5 300 3"
   interval=00:00:05:00
 ```
-在 LDAP 服务器上添加配置:
-```
+Add configuration on LDAP server:
+```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f syncrepl.ldif
 ```
-### 测试
-```
+### Test
+```shell
 vi ldaptest.ldif
 ===========================================================
 dn: uid=ldaptest,ou=accounts,ou=hexang.org,dc=hexang,dc=org
@@ -722,50 +693,51 @@ shadowWarning: 7
 shadowExpire: -1
 mail: xiaoming.huang@qq.com
 ```
-在 LDAP 服务器上添加成员:
-```
+Add members to the LDAP server:
+```shell
 ldapadd -x -W -D "cn=admin,dc=hexang,dc=org" -f ldaptest.ldif
 ```
-在任意一台主机查询当前成员信息的命令:
-```
+You can query the current member's information on any host:
+```shell
 ldapsearch -x uid=ldaptest -b dc=hexang,dc=org
 ```
-删除成员:
-```
+Delete members:
+```shell
 ldapdelete -W -D "cn=admin,dc=hexang,dc=org" "uid=ldaptest,ou=accounts,ou=hexang.org,dc=hexang,dc=org"
 ```
-如果添加或删除的成员的效果在所有服务器上的效果一致，说明配置成功了。
-### phpLDAPadmin 配置
-#### 绑定公网 IP 和主机名
-追加记录到 hosts 文件
+If the effect of adding or deleting members is the same across all servers, that means it works.
+
+### phpLDAPadmin Configuration
+#### Bind public network IP and host name
+Append records to the hosts file:
+```shell
+echo "(Your cloud server's public network IP)  Apache" >> /etc/hosts
 ```
-echo "(你的云服务器公网IP)  Apache" >> /etc/hosts
-```
-#### 配置 Apache 服务
-检查是否安装了 Apache httpd 和 PHP，不然将一错到底。
-```
-[root@VM_0_15_centos ~]# rpm -qa | grep httpd # 查看是否安装了http包
+#### Configure Apache Services
+Check that Apache HTTPD and PHP are installed，Otherwise it would be wrong.
+```shell
+[root@VM_0_15_centos ~]# rpm -qa | grep httpd # Check if the HTTP package has been installed
 httpd-2.4.6-89.el7.centos.1.x86_64
 httpd-tools-2.4.6-89.el7.centos.1.x86_64
 httpd-devel-2.4.6-89.el7.centos.1.x86_64
 httpd-manual-2.4.6-89.el7.centos.1.noarch
 httpd-itk-2.4.7.04-2.el7.x86_64
 ```
-没有任何输出的朋友们赶紧运行下方命令，有的检查一下依赖包是否齐全。
-```
+If you don't have any output, check that the dependency packages are complete.
+```shell
 yum -y install httpd*
 ```
-安装完毕后开始配置 Apache。配置文件存放在 /etc/httpd/conf/ 文件夹下。<br>
-默认的 Apache 监听端口是 80。这边使用默认端口就行。
-这边没有特殊需要，不需要改动 httpd.conf 。
+Configure Apache after installation, The configuration files are stored in this path: /etc/httpd/conf/ <br>
+The default Apache listening port is 80, Just use the default port.
+If there are no special needs, do not change the 'httpd.conf'.
 
-启动 Apache:
-```
+Activate Apache:
+```shell
 systemctl start httpd.service
 ```
-检查 80 端口的占用情况。如果发现启动不成功，可以检查一下 80 端口是否被其他服务占用，或者配置文件有无语法问题。实在找不到的原因请查看日志。
-```
-[root@VM_0_15_centos ~]# lsof -i:80 # 这种情况是正常监听
+Check the usage of port 80. If port 80 doesn't work，check if it is occupied by other services，Or whether the configuration file has syntax problems. 
+```shell
+[root@VM_0_15_centos ~]# lsof -i:80 # This is normal listening
 COMMAND  PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 httpd   6045   root    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 httpd   6046 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
@@ -774,27 +746,27 @@ httpd   6048 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 httpd   6049 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 httpd   6050 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 ```
-检查 Apache 是否正常运行:
-```
+Check if Apache is working properly:
+```shell
 service httpd status
 ```
-报绿色就可以放心了，如果是红色检查一下日志，看哪里出错了。
+If it looks like this, that means it works, otherwise, check the log information to find the error location
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
 
-我用 Chrome 测试了一下，出现这个说明 Apache 正常运行。
+You can use Chrome to test it, and if the following image appears, Apache is working.
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
 
-#### 安装 phpLDAPadmin
-首先运行安装:
-```
+#### Install phpLDAPadmin
+First run the installation:
+```shell
 yum install -y phpldapadmin
 ```
-修改配置内容:
-```
+Modify configuration content:
+```shell
 vim /etc/httpd/conf.d/phpldapadmin.conf
 ```
-把 11 行的 "Require local" 改成 "Require all granted":
-```
+Change the "Require local" in line 11 to "Require all granted":
+```shell
 #
 #  Web-based tool for managing LDAP servers
 #
@@ -805,7 +777,7 @@ Alias /ldapadmin /usr/share/phpldapadmin/htdocs
 <Directory /usr/share/phpldapadmin/htdocs>
   <IfModule mod_authz_core.c>
     # Apache 2.4
-    Require all granted # 更改这里，我这已经是更改好的了。
+    Require all granted # Change this. PS: I've changed this.
   </IfModule>
   <IfModule !mod_authz_core.c>
     # Apache 2.2
@@ -816,30 +788,32 @@ Alias /ldapadmin /usr/share/phpldapadmin/htdocs
   </IfModule>
 </Directory>
 ```
-修改 PHP 配置，利用用户名登录 LDAP:
-```
+ Modify the PHP configuration, Log into LDAP with the user name:
+```shell
 vim /etc/phpldapadmin/config.php
 ```
-**398** 行: 把 uid 改为 cn, 即用用户名登录。
-```
+Line **398** : Change 'uid' to 'cn'：
+
+```shell
 $servers->setValue('login','attr','uid'); 
-# 改成 $servers->setValue('login','attr','cn');
+# Do like this: $servers->setValue('login','attr','cn');
 ```
-**460** 行:关闭匿名登录以保证数据信息安全。
-```
+Line **460** :Close anonymous login to protect data security：
+```shell
 // $servers->setValue('login','anon_bind',true); 
-# 注销删掉，防止 default 为 true。并改成 $servers->setValue('login','anon_bind',false);
+# Uncomment Line 460，Prevent default from becoming true. Change it into $servers->setValue('login','anon_bind',false);
 ```
-**519** 行: 添加 cn, sn 以确保用户名的唯一性
-```
+Line **519** : Add' cn', 'sn' to ensure uniqueness of user name：
+
+```shell
 #  $servers->setValue('unique','attrs',array('mail','uid','uidNumber')); 
-# 注销删掉。并改成 $servers->setValue('unique','attrs',array('mail','uid','uidNumber','cn','sn'));
+# Uncomment and chage it into $servers->setValue('unique','attrs',array('mail','uid','uidNumber','cn','sn'));
 ```
-重启 Apache 服务，让修改的配置生效。
-```
+Restart the Apache service to let the modified configuration take effect:
+```shell
 systemctl restart httpd
 ```
-现在我们在浏览器里输入: ```http://你的公网IP/ldapadmin/``` 就能获得 第五步 创建的架构了。
+Now we can enter: "http:// 'your public network IP' /ldapadmin/ " in the browser to get the architecture created in step **5**.
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
 
 ## Ubuntu 下 CAS 安装及配置方法
@@ -874,11 +848,11 @@ systemctl restart httpd
 ### Apache Tomcat 9 配置
 #### 第一步 安装 OpenJDK
 升级当前的 `apt` 包:
-```
+```shell
 sudo apt update
 ```
 安装默认的 `Java OpenJDK` 包，当前的版本是 11。千万不要安装成 Oracle Java 。
-```
+```shell
 sudo apt install default-jdk
 ```
 查看当前 JDK 版本,确保版本号满足环境要求:
@@ -887,30 +861,30 @@ java -version
 ```
 #### 第二步 创建 Tomcat 用户
 出于安全考虑，Tomcat 不应该在 root 账户下运行。我们需要额外创建一个系统用户:
-```
+```shell
 sudo useradd -r -m -U -d /opt/tomcat -s /bin/false tomcat
 ```
 #### 第三步 安装 Tomcat
 去[官网](https://tomcat.apache.org/download-90.cgi)下载 Tomcat 9
-```
+```shell
 wget http://apache.01link.hk/tomcat/tomcat-9/v9.0.24/bin/apache-tomcat-9.0.24.tar.gz -P /tmp
 ```
 提取压缩文件并移动到第二步创建的管理者的目录里:
-```
+```shell
 sudo tar xf /tmp/apache-tomcat-9*.tar.gz -C /opt/tomcat
 ```
 为了更好地控制 Tomcat 版本，需要创建一个名为 `latest` 的链接，并直接指向 Tomcat 安装地址:
-```
+```shell
 sudo ln -s /opt/tomcat/apache-tomcat-9.0.24 /opt/tomcat/latest
 ```
 对管理者进行授权:
-```
+```shell
 sudo chown -RH tomcat: /opt/tomcat/latest
 sudo sh -c 'chmod +x /opt/tomcat/latest/bin/*.sh'
 ```
 #### 第四步 创建系统单元文件
 创建服务单元:
-```
+```shell
 sudo vim /etc/systemd/system/tomcat.service
 ===========================================================
 [Unit]
@@ -940,46 +914,46 @@ WantedBy=multi-user.target
 > 请注意 JAVA_HOME 是否正确。
 
 保存并启动新单元文件:
-```
+```shell
 sudo systemctl daemon-reload
 ```
 下一步，选择监听端口。最理想的状态是不用输端口号，但是我们的 Tomcat 出于安全考虑不以 Root 身份运行，因此没有办法通过直接更改配置文件中的端口号来实现 80 端口的监听。所以，我们需要通过 iptables 进行端口转发:
-```
+```shell
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 ```
 并保存防火墙规则:
-```
+```shell
 sudo iptables-save > /etc/zsmiptables.rules
 ```
 设置开机自动加载:
-```
+```shell
 vim /etc/network/interfaces
 ===========================================================
 # 在末尾追加一行
 pre-up iptables-restore < /etc/zsmiptables.rules
 ```
 启动 Tomcat 服务:
-```
+```shell
 sudo systemctl start tomcat
 ```
 注意查看 Tomcat 是否正常运行:
-```
+```shell
 sudo systemctl status tomcat
 ```
 如果标绿表示运行正常，设置开机自动启动:
-```
+```shell
 sudo systemctl enable tomcat
 ```
 ### Nginx 配置
 #### 第一步 创建 Nginx 运行账户
 出于安全考虑，不建议以 Root 权限运行 Nginx:
-```
+```shell
 sudo useradd --shell /sbin/nologin --home-dir /usr/local/nginx nginx
 ```
 #### 第二步 安装依赖库
 ##### GCC 库
 有的系统会预装 gcc，可通过以下命令查看系统环境中是否已有此库:
-```
+```shell
 gcc
 ```
 如果得到下方的结果，则需要安装 GCC 库:
