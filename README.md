@@ -416,7 +416,7 @@ vim loglevel.ldif
 dn: cn=config
 changetype: modify
 add: olcLogLevel
-# Set the log level. level 296 is the sum of 256(Log connection/operation/result), 32(Search filter processing) and 8(Connection management).
+# Set the log level. Level 296 is the sum of 256(Log connection/operation/result), 32(Search filter processing) and 8(Connection management).
 olcLogLevel: 296
 ```
 
@@ -453,41 +453,36 @@ Check the current log configuration:
 olcLogLevel: 296
 ```
 
-#### Step3 Configure Administrator Password
+#### Step 3: Configure the Password of Main Manager
 
 ```shell
-touch chrootpw.ldif # Create a file
+touch chrootpw.ldif # Create a file.
 echo "dn: olcDatabase={0}config,cn=config" >> chrootpw.ldif 
-echo "changetype: modify" >> chrootpw.ldif # Specify modification type
-echo "add: olcRootPW" >> chrootpw.ldif # Add the olcRootPW configuration item
-slappasswd -s w8JFUEWjAsHBwLjjcQrCYiPP | sed -e "s#{SSHA}#olcRootPW: {SSHA}#g" >> chrootpw.ldif # Append ciphertext password
+echo "changetype: modify" >> chrootpw.ldif # Specify modification type.
+echo "add: olcRootPW" >> chrootpw.ldif # Add the olcRootPW configuration item.
+slappasswd -s w8JFUEWjAsHBwLjjcQrCYiPP | sed -e "s#{SSHA}#olcRootPW: {SSHA}#g" >> chrootpw.ldif # Append ciphertext password.
 ```
 
-Execute the LDAP Modification Configuration Command:
+Execute the following command to take effect:
 
 ```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f chrootpw.ldif
 ```
 
-#### Step4 Import Schema
+#### Step 4: Import Schemas
 
-The Schema is in this path: /etc/openldap/ Schema/，I have written a script that can import all of the schemas
+The schema is in this path: /etc/openldap/schema/, I have written a script that can import all of the schemas:
 
 ```shell
 vim import_schema.sh
-```
-
-Copy the following lines to the file.
-
-```shell
+===========================================================
 all_files='ls /etc/openldap/schema/*.ldif'
 for file in $all_files
 do
   ldapadd -Y EXTERNAL -H ldapi:/// -f $file
 done
 ```
-
-#### Step5 Configure the top-level domain for LDAP
+#### Step 5: Configure the Top-level Domain of LDAP
 
 ```shell
 vim changedomain.ldif
@@ -510,20 +505,20 @@ olcRootDN: cn=admin,dc=hexang,dc=org
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 replace: olcRootPW
-olcRootPW: # The password generated in step 2，It can be viewed by 'vim chrootpw.ldif'
+olcRootPW: # The password generated in step 2，you can find it by execute 'cat chrootpw.ldif'
 ```
 
-Execute modify command:
+Execute the following command to take effect:
 
 ```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f changedomain.ldif
 ```
 
-### Multi master Configuration
+### Multi-Master Replication Configuration
 
-All primary servers must perform step **1** and step **2**:
+All LDAP providers must perform step **1** and step **2**:
 
-#### Step1 Configure the Syncprov module
+#### Step 1: Configure the Syncprov module
 
 ```shell
 vi mod_syncprov.ldif
@@ -535,17 +530,17 @@ olcModulePath: /usr/lib64/openldap
 olcModuleLoad: syncprov.la
 ```
 
-Add configuration on LDAP server:
+Execute the following command to take effect:
 
 ```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f mod_syncprov.ldif
 ```
 
-#### Step2 Enable mirror Configuration
+#### Step 2: Configure Mirror Replication
 
-In this next step please notice which primary server is being configured:
+In this step please be aware of which server is configured:
 
-olcServerID : Subscript corresponding to the primary server (**1** or **2**).
+**olcServerID** is a number to represent the server (**1** or **2**).
 
 ```shell
 vi master.ldif
@@ -556,16 +551,16 @@ add: olcServerID
 olcServerID: 1 or 2
 ```
 
-Change configuration on the LDAP server:
+Execute the following command to take effect:
 
 ```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f master.ldif
 ```
 
 Configuration mirror:
-
-PS:You need to fill in the "Administrator's clear-text password" 
-
+```diff
+- "credentials" means main manager's unencrypted password.
+```
 ```shell
 vi configrep.ldif
 ===========================================================
@@ -585,23 +580,23 @@ dn: olcDatabase={0}config,cn=config
 changetype: modify
 add: olcSyncRepl
 olcSyncRepl: rid=001 provider=ldap://master01.hexang.org binddn="cn=config"
-  bindmethod=simple credentials= "Administrator's clear-text password"  searchbase="cn=config"
+  bindmethod=simple credentials= "Main manager's password"  searchbase="cn=config"
   type=refreshAndPersist retry="5 5 300 5" timeout=1
 olcSyncRepl: rid=002 provider=ldap://master02.hexang.org binddn="cn=config"
-  bindmethod=simple credentials="Administrator's clear-text password" searchbase="cn=config"
+  bindmethod=simple credentials="Main manager's password" searchbase="cn=config"
   type=refreshAndPersist retry="5 5 300 5" timeout=1
 -
 add: olcMirrorMode
 olcMirrorMode: TRUE
 ```
 
-Change the configuration on the LDAP server:
+Execute the following command to take effect:
 
 ```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f configrep.ldif
 ```
 
-#### Step3 Enable syncprov module
+#### Step 3: Enable syncprov module
 
 ```shell
 vi syncprov.ldif
@@ -613,13 +608,13 @@ olcOverlay: syncprov
 olcSpSessionLog: 100
 ```
 
-Add configuration on LDAP server:
+Execute the following command to take effect:
 
 ```shell
 ldapadd -Y EXTERNAL -H ldapi:/// -f syncprov.ldif
 ```
 
-#### Step4 Enabling Mirror Database
+#### Step 4: Configure Mirror Database 
 
 ```shell
 vi olcdatabasehdb.ldif
@@ -638,14 +633,14 @@ replace: olcRootDN
 olcRootDN: cn=admin,dc=hexang,dc=org
 -
 replace: olcRootPW
-olcRootPW: 'Administrator password'
+olcRootPW: 'Main manager's password'
 -
 add: olcSyncRepl
 olcSyncRepl: rid=003 provider=ldap://master01.hexang.org binddn="cn=admin,dc=hexang,dc=org" bindmethod=simple
-  credentials='Secondary Administrator Password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
+  credentials='Secondary manager's password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
   interval=00:00:05:00 retry="5 5 300 5" timeout=1
 olcSyncRepl: rid=004 provider=ldap://master02.hexang.org binddn="cn=admin,dc=hexang,dc=org" bindmethod=simple
-  credentials='Secondary Administrator Password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
+  credentials='Secondary manager's password' searchbase="dc=hexang,dc=org" type=refreshAndPersist
   interval=00:00:05:00 retry="5 5 300 5" timeout=1
 -
 add: olcDbIndex
@@ -658,17 +653,17 @@ add: olcMirrorMode
 olcMirrorMode: TRUE
 ```
 
-Add configuration on the LDAP server:
+Execute the following command to take effect:
 
 ```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f olcdatabasehdb.ldif
 ```
 
-#### Step5 Clone the Sturcture
+#### Step 5: Clone the Structure of Organization
 
 Set the directory Structure according to [OpenLDAP Tree Structure](#OpenLDAP Tree Structure).<br>
 
-This step can be performed on any primary server:
+**ONLY** one of LDAP providers needs to execute the following command:
 
 ```shell
 vim organisation.ldif
@@ -718,15 +713,15 @@ objectClass: organizationalUnit
 ou: accounts
 ```
 
-Execute modify command:
+Execute the following command to take effect:
 
 ```shell
 ldapadd -x -D cn=admin,dc=hexang,dc=org -W -f organisation.ldif
 ```
 
-#### Step6 Create Sub-Administrator
+#### Step 6: Create Secondary Manager
 
-Considering security，We need to create a read-only secondary management on the primary server:
+Given to security，We need to create a read-only secondary management on the primary server:
 
 ```shell
 vi rpuser.ldif
