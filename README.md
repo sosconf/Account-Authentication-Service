@@ -949,4 +949,5 @@ Restart the Apache to let the modified configuration take effect:
 systemctl restart httpd
 ```
 
-Now we can enter: "http://your public network IP/ldapadmin/" in the browser to get the architecture created in step **5**.
+Now we can enter: ```http://your public network IP/ldapadmin/``` in the browser to get the architecture created in step **5**.
+<div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
