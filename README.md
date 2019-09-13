@@ -1,34 +1,35 @@
 # Contents
 ================
 [TOC]
-# AAA System Development Documentation
+# Account Authentication Service
 [![LICENSE](https://img.shields.io/badge/license-AGPLv3-blue)](https://github.com/Hephaest/Simple-Java-Caculator/blob/master/LICENSE)
 [![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.X-brightgreen)](https://www.openldap.org/doc/admin24/)
 [![CAS](https://img.shields.io/badge/CAS-6.0.X-orange)](https://apereo.github.io/cas/6.0.x/)
 
-> This document describes the single sign-on based on CAS，helps new friends to quickly understand the project and do rapid development ．PS：for tech members only．
+> This document describes the Single Sign-On based on CAS, helps trainees quickly learn this project achieving agile development.
 
-Latest update: `2019/08/31`
+Latest update: `2019/09/13`
 
-## Install OpenLDAP In CentOS
+## CentOS: OpenLDAP Installation and Configuration
 
-> To facilitate the following configuration ，do the following configuration with **root** authority
+> The following commands require **root** access.
 
-We need at least 4 servers to implement the LDAP service（2 Primary Servers and 2 Secondary Servers ）,to prevent a server from going down and disabling the service:
+We need at least **4** servers to implement the LDAP service (2 as LDAP providers and 2 as LDAP consumers), so even if one or two server are down, the whole system can still function:
 
-- If possible，To improve the access speed, the Primary Servers and the Secondary Servers are best  served on the same intranet .
-- Primary servers are best located in different areas, free from the impact of server paralysis in some areas.
-
+```diff
+! If possible, make a LDAP provider and a consumer in the same LAN to improve access speed.
+! However, different pair of LDAP servers should be located in different LAN to free from geographical impact.
+```
 <div align="center">
 <table class="tg">
   <tr align="center">
-    <th class="tg-0pky" rowspan="2">role</th>
-    <th class="tg-0lax" colspan="2">Primary IP Address</th>
+    <th class="tg-0pky" rowspan="2">Role</th>
+    <th class="tg-0lax" colspan="2">IP Address</th>
     <th class="tg-0pky" rowspan="2">OS</th>
   </tr>
   <tr align="center">
     <td class="tg-0lax">Public IP</td>
-    <td class="tg-0pky">Intranet IP</td>
+    <td class="tg-0pky">LAN IP</td>
   </tr>
   <tr>
     <td class="tg-0pky">master01.hexang.org</td>
@@ -81,54 +82,54 @@ We need at least 4 servers to implement the LDAP service（2 Primary Servers and
 
 ### OpenLDAP Tree Structure
 
-The current organizational structure is relatively simple，each domain name level ou may later create its own management team for management and privacy protection:
+The current organizational structure is relatively simple, each domain name level **ou** will create its own administrator due to privacy concerns:
 
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
 
 ### OpenLADP User Information Collection
 
-We use the `schema` in `inetorgperson.ldif`  to collect user information, and we can collect the following data:
+We use `inetorgperson.ldif` of schemas to collect the user information, the data we need to collect has been listed as follows:
 
 <div align="center">
 <table class="tg">
   <tr>
-    <th class="tg-0pky">The property name</th>
-    <th class="tg-0pky">Format</th>
-    <th class="tg-0pky">Meaning</th>
+    <th class="tg-0pky">Attribute</th>
+    <th class="tg-0pky">Type</th>
+    <th class="tg-0pky">Description</th>
   </tr>
   <tr>
     <td class="tg-0pky">uid</td>
     <td class="tg-0pky">char</td>
-    <td class="tg-0pky">User name</td>
+    <td class="tg-0pky">Username.</td>
   </tr>
   <tr>
     <td class="tg-0pky">cn</td>
     <td class="tg-0pky">char</td>
-    <td class="tg-0pky">User's full name</td>
+    <td class="tg-0pky">Name.</td>
   </tr>
   <tr>
     <td class="tg-0pky">jpegPhoto</td>
     <td class="tg-0pky">binary</td>
-    <td class="tg-0pky">Profile photo</td>
+    <td class="tg-0pky">Profile photo.</td>
   </tr>
   <tr>
     <td class="tg-0pky">mail</td>
     <td class="tg-0pky">char</td>
-    <td class="tg-0pky">User's mailbox for authentication</td>
+    <td class="tg-0pky">Primary email address.</td>
   </tr>
     <tr>
     <td class="tg-0pky">preferredLanguage</td>
     <td class="tg-0pky">char</td>
-    <td class="tg-0pky">Preferred Language</td>
+    <td class="tg-0pky">Preferred Language.</td>
   </tr>
 </table>
 </div>
 
-### LDAP Synchronous
+### LDAP Synchronous Conditions
 
 OpenLDAP's synchronization schema needs to satisfy the following **6** conditions:
 
-1. **Time synchronization between servers**
+1. **Consistency of time clock**
 
    Install NTP
 
@@ -136,7 +137,7 @@ OpenLDAP's synchronization schema needs to satisfy the following **6** condition
    yum -y install ntp
    ```
 
-   To avoid errors between local time and server time, we should do  `ntpdate` first.
+   To avoid errors between local time and server time, we should execute `ntpdate` at first.
 
    ```shell
    ntpdate ntp1.aliyun.com
@@ -148,7 +149,7 @@ OpenLDAP's synchronization schema needs to satisfy the following **6** condition
    vi /etc/ntp.conf
    ```
 
-   Comment out  `iburst`  in `server ntp` ，add a new line of NTP server information behind:
+   Add a line comment in `server ntp xx iburst` then append a new line of NTP server information:
 
    ```shell
    server ntp1.aliyun.com iburst  # we use aliyun public network NTP server
@@ -166,7 +167,7 @@ OpenLDAP's synchronization schema needs to satisfy the following **6** condition
    systemctl enable ntpd.service
    ```
 
-   Check whether the operation is effective:
+   Check whether configurations take effect or not:
 
    ```shell
    ntpstat
@@ -174,54 +175,55 @@ OpenLDAP's synchronization schema needs to satisfy the following **6** condition
 
 2. **Consistency of OpenLDAP versions**
 
-   We use `2.4.4` version.
+   We currently install the version of `2.4.4`.
 
-3. **Domain names shoule be resolved between every two OpenLDAP nodes**
+3. **Domain name bidirectional resolutions**
 
    Not set yet.
 
-4. **The initial configuration of master-slave and master-master synchronization is identical(Includes the directory tree structure)**
+4. **Consistency of initial master-slave and multi-master replication configuration**
 
-   Copy and paste the following script.
+   We will discuss this later.
 
-5. **Data entries are the same across servers**
+5. **Consistency of data entries**
 
    Just add the data after configuration.
 
-6. **Schema is the same**
+6. **Consistency of schemas**
 
-   Copy and paste the following script.
+   We will discuss this later.
 
-### Script execution file
+### Shell Scripts
 
-I've uploaded an executable Shell script [here](https://hexang.org/sosconf/tech-team/ldap-account-server/tree/master/shell%20scripts). You can easily configure it by executing the scripts:
-All servers should perform Step 1:
+I've uploaded executable Shell scripts [here](https://hexang.org/sosconf/tech-team/ldap-account-server/tree/master/shell%20scripts). You can easily configure it by executing the scripts:
+
+Step 1: Both LDAP providers and consumers need to execute the following commands:
 
 ```shell
 # Synchro time first, then activate SELinux
 chmod +x NTP_and_SELinux.sh
-./NTP_and_SELinux.sh 'the first primary server IP' 'the second primary server IP'
+./NTP_and_SELinux.sh 'the provider's IP' 'the corresponding consumer's IP'
 ```
 
-Step 2: Settings for two master LDAP servers:
+Step 2: Settings for LDAP providers:
 
 ```shell
 chmod +x Config_Replication.sh
-./Config_Replication.sh 'Administrator password' 'Server serial number'
+./Config_Replication.sh 'Main manager's password' 'Server's id'
 ```
 
-Step 3: Simply operate on any of the primary servers:
+Step 3: Only one of LDAP providers needs to execute the following commands:
 
 ```shell
 chmod +x Database_Replication.sh
-./Database_Replication.sh 'Sub-administrator password'
+./Database_Replication.sh 'Secondary manager's password'
 ```
 
-Step4: Settings for two slave LDAP servers:
+Step4: Settings for LDAP consumers:
 
 ```shell
 chmod +x Slave_Configuration.sh
-./Slave_Configuration.sh 'corresponding primary server IP' 'Administrator password' 'Sub-administrator password'
+./Slave_Configuration.sh 'corresponding provider's IP' 'Administrator password' 'Secondary manager's password'
 ```
 
 ### Firewall Rules
@@ -234,44 +236,44 @@ chmod +x Slave_Configuration.sh
     <th class="tg-0pky">Source</th>
     <th class="tg-0pky">Protocol port</th>
     <th class="tg-0pky">Strategy</th>
-    <th class="tg-0pky">Comment</th>
+    <th class="tg-0pky">Description</th>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:22</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Allow Linux SSH login</td>
+    <td class="tg-0pky">Allow Linux SSH login.</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">ICMP</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Support Ping services</td>
+    <td class="tg-0pky">Support Ping services.</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:80</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Allow Web services HTTP(80)</td>
+    <td class="tg-0pky">Allow Web services HTTP(80).</td>
   </tr>
   <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:443</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Allow Web services HTTP(443)</td>
+    <td class="tg-0pky">Allow Web services HTTP(443).</td>
   </tr>
     <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">TCP:389</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Allow LDAP services</td>
+    <td class="tg-0pky">Allow LDAP service.s</td>
   </tr>
   </tr>
     <tr>
     <td class="tg-0pky">0.0.0.0/0</td>
     <td class="tg-0pky">UDP:123</td>
     <td class="tg-0pky">permit</td>
-    <td class="tg-0pky">Allow NTP services</td>
+    <td class="tg-0pky">Allow NTP services.</td>
   </tr>
 </table>
 </div>
@@ -286,7 +288,7 @@ chmod +x Slave_Configuration.sh
     <th class="tg-0pky">Source</th>
     <th class="tg-0pky">Protocol port</th>
     <th class="tg-0pky">Strategy</th>
-    <th class="tg-0pky">Comment</th>
+    <th class="tg-0pky">Description</th>
   </tr>
   <tr align="center">
     <td class="tg-0pky">0.0.0.0/0</td>
@@ -298,7 +300,7 @@ chmod +x Slave_Configuration.sh
 </table>
 </div>
 
-#### SELinux Setting
+#### SELinux Settings
 
 Activate SELinux:
 
@@ -314,41 +316,41 @@ systemctl reboot
 
 ### LDAP Basic Configuration
 
-#### Step1 install LDAP
+#### Step 1: install LDAP
 
-Install all the relevant packages so as not to miss anything.
+Install all the relevant packages in case of missing something.
 
 ```shell
 # migrationtools --Used to migrate system users and groups to LDAP.
 yum install -y openldap openldap-* migrationtools policycoreutils-python
 ```
 
-BerkeleyDB configuration, and licensed to LDAP users。
+BerkeleyDB configuration and authorize to the LDAP user.
 
 ```shell
 cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG # copy
 chown ldap:ldap /var/lib/ldap/DB_CONFIG # Authorization
 ```
 
-Activate LDAP server.
+Activate the LDAP server.
 
 ```shell
 systemctl enable slapd
 ```
 
-Let's try to run the LDAP service:
+Start the LDAP service:
 
 ```shell
 systemctl start slapd
 ```
 
-Error messages will be generated at this time，run the following command to get the reason for the startup failure:
+Error messages will be generated at this time，please run the following command to catch the error message:
 
 ```shell
 audit2allow -al
 ```
 
-Create a separate rule for LDAP:
+Create a new SELinux rule for LDAP:
 
 ```shell
 audit2allow -a -M ldap_rule
@@ -367,54 +369,50 @@ Check if the rule was loaded successfully:
 ldap_rule       1.0
 ```
 
-Restart LDAP service:
+Restart the LDAP service:
 
 ```shell
 systemctl start slapd
 ```
 
-Check the running status of LDAP, the green mark indicates normal operation:
+Check the running status of LDAP, the green mark indicates successful running:
 
 ```shell
 systemctl status slapd
 ```
 
-Check port usage ;By default, port 389 is occupied：
+Check port usage. By default, LDAP uses port 389 to listen：
 
 ```shell
 netstat -tlnp | grep slapd
 ```
 
-#### Step2 Configure the syslog to log LDAP service
+#### Step 2: Configure the syslog
 
-First create the log，then authorize files:
+Firstly, create the log then authorize files:
 
 ```shell
 touch /var/log/slapd.log
 chown -R ldap. /var/log/slapd.log
 ```
 
-Appending to the configuration of the system log after authorization
+Appending the file to the system log:
 
 ```shell
 echo "local4.* /var/log/slapd.log" >> /etc/rsyslog.conf
 ```
 
-Restart the system logger to take effect:
+Restart the system log to take effect:
 
 ```shell
 systemctl restart rsyslog
 ```
 
-Next, update the level of the LDAP log. First, create the intermediate file:
+Next, update the level of the LDAP log:
 
 ```shell
 vim loglevel.ldif
-```
-
-Copy the following lines to the file:
-
-```shell
+===========================================================
 dn: cn=config
 changetype: modify
 add: olcLogLevel
@@ -422,13 +420,13 @@ add: olcLogLevel
 olcLogLevel: 296
 ```
 
-Add logging to the main configuration file:
+Modify the LDAP configuration:
 
 ```shell
 ldapmodify -Y EXTERNAL -H ldapi:/// -f loglevel.ldif
 ```
 
-In addition, it is better to shard the log to facilitate error checking:
+In addition, shard the log for error checking:
 
 ```shell
 vi /etc/logrotate.d/ldap
