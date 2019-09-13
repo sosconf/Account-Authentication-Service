@@ -223,7 +223,7 @@ Step4: Settings for LDAP consumers:
 
 ```shell
 chmod +x Slave_Configuration.sh
-./Slave_Configuration.sh 'corresponding provider's IP' 'Administrator password' 'Secondary manager's password'
+./Slave_Configuration.sh 'corresponding provider's IP' 'Main manager's password' 'Secondary manager's password'
 ```
 
 ### Firewall Rules
@@ -721,7 +721,7 @@ ldapadd -x -D cn=admin,dc=hexang,dc=org -W -f organisation.ldif
 
 #### Step 6: Create Secondary Manager
 
-Given to security，We need to create a read-only secondary management on the primary server:
+Given to security, We need to create a read-only manager on the LDAP provider:
 
 ```shell
 vi rpuser.ldif
@@ -730,19 +730,19 @@ dn: uid=rpuser,dc=hexang,dc=org
 objectClass: simpleSecurityObject
 objectclass: account
 uid: rpuser
-description: Replication  User
-userPassword: 'Secondary Administrator Password'
+description: Replication User
+userPassword: 'Secondary manager's password'
 ```
 
-Execute add command:
+Execute the following command to take effect:
 
 ```shell
-ldapadd -x -D cn=admin,dc=hexang,dc=org -w 'Administrator password' -f rpuser.ldif
+ldapadd -x -D cn=admin,dc=hexang,dc=org -w 'Main manager's password' -f rpuser.ldif
 ```
 
-### Master -Slave Configuration
+### Master-Slave Configuration
 
-PS: Attention the IP address of the primary server:
+Please pay attention to the IP address of the LDAP provider:
 
 ```shell
 vi syncrepl.ldif
@@ -754,7 +754,7 @@ olcSyncRepl: rid=001
   provider=ldap://IP:389/
   bindmethod=simple
   binddn="cn=admin,dc=hexang,dc=org"
-  credentials='Administrator password'
+  credentials='Main manager's password'
   searchbase="dc=hexang,dc=org"
   scope=sub
   schemachecking=on
@@ -769,7 +769,7 @@ Add configuration on LDAP server:
 ldapadd -Y EXTERNAL -H ldapi:/// -f syncrepl.ldif
 ```
 
-### Test
+### OpenLDAP Test
 
 ```shell
 vi ldaptest.ldif
@@ -797,25 +797,25 @@ shadowExpire: -1
 mail: xiaoming.huang@qq.com
 ```
 
-Add members to the LDAP server:
+Add a member to the LDAP server:
 
 ```shell
 ldapadd -x -W -D "cn=admin,dc=hexang,dc=org" -f ldaptest.ldif
 ```
 
-You can query the current member's information on any host:
+Now you can query the xiaoming's information on any host:
 
 ```shell
 ldapsearch -x uid=ldaptest -b dc=hexang,dc=org
 ```
 
-Delete members:
+Remove command:
 
 ```shell
 ldapdelete -W -D "cn=admin,dc=hexang,dc=org" "uid=ldaptest,ou=accounts,ou=hexang.org,dc=hexang,dc=org"
 ```
 
-If the effect of adding or deleting members is the same across all servers, that means it works.
+If the effect of adding or deleting a member across all servers, that means it works.
 
 ### phpLDAPadmin Configuration
 
@@ -824,12 +824,12 @@ If the effect of adding or deleting members is the same across all servers, that
 Append records to the hosts file:
 
 ```shell
-echo "(Your cloud server's public network IP)  Apache" >> /etc/hosts
+echo "(the server's public network IP)  Apache" >> /etc/hosts
 ```
 
 #### Configure Apache Services
 
-Check that Apache HTTPD and PHP are installed，Otherwise it would be wrong.
+Check that Apache HTTP and PHP are installed:
 
 ```shell
 [root@VM_0_15_centos ~]# rpm -qa | grep httpd # Check if the HTTP package has been installed
@@ -840,14 +840,14 @@ httpd-manual-2.4.6-89.el7.centos.1.noarch
 httpd-itk-2.4.7.04-2.el7.x86_64
 ```
 
-If you don't have any output, check that the dependency packages are complete.
+Check the dependency packages are completely installed:
 
 ```shell
 yum -y install httpd*
 ```
 
-Configure Apache after installation, The configuration files are stored in this path: /etc/httpd/conf/ <br>
-The default Apache listening port is 80, Just use the default port.
+Configure Apache after installation, the configuration files are stored in this path: /etc/httpd/conf/ <br>
+The default Apache is bind on port 80, just use the default port.
 If there are no special needs, do not change the 'httpd.conf'.
 
 Activate Apache:
@@ -856,7 +856,7 @@ Activate Apache:
 systemctl start httpd.service
 ```
 
-Check the usage of port 80. If port 80 doesn't work，check if it is occupied by other services，Or whether the configuration file has syntax problems. 
+Check the usage of port 80. If port 80 doesn't listen, check if it is occupied by other services or the configuration file has syntax problems. 
 
 ```shell
 [root@VM_0_15_centos ~]# lsof -i:80 # This is normal listening
@@ -869,35 +869,32 @@ httpd   6049 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 httpd   6050 apache    3u  IPv4 151157      0t0  TCP *:http (LISTEN)
 ```
 
-Check if Apache is working properly:
+Check whether Apache is successfully running:
 
 ```shell
 service httpd status
 ```
 
-If it looks like this, that means it works, otherwise, check the log information to find the error location
+If the output is the same as follows, that means your Apache is successfully running. Otherwise, check the log information to find the error.
 
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
-
-You can use Chrome to test it, and if the following image appears, Apache is working.
-
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
 
 #### Install phpLDAPadmin
 
-First run the installation:
+Firstly, install phpldapadmin package:
 
 ```shell
 yum install -y phpldapadmin
 ```
 
-Modify configuration content:
+Modify configuration:
 
 ```shell
 vim /etc/httpd/conf.d/phpldapadmin.conf
 ```
 
-Change the "Require local" in line 11 to "Require all granted":
+Line **11**: Change the "Require local" to "Require all granted":
 
 ```shell
 #
@@ -922,37 +919,37 @@ Alias /ldapadmin /usr/share/phpldapadmin/htdocs
 </Directory>
 ```
 
- Modify the PHP configuration, Log into LDAP with the user name:
+Modify the PHP configuration, log into LDAP with the user name:
 
 ```shell
 vim /etc/phpldapadmin/config.php
 ```
 
-Line **398** : Change 'uid' to 'cn'：
+Line **398**: Change 'uid' to 'cn'：
 
 ```shell
 $servers->setValue('login','attr','uid'); 
 # Do like this: $servers->setValue('login','attr','cn');
 ```
 
-Line **460** :Close anonymous login to protect data security：
+Line **460**: Close anonymous login to protect data security：
 
 ```shell
 // $servers->setValue('login','anon_bind',true); 
 # Uncomment Line 460，Prevent default from becoming true. Change it into $servers->setValue('login','anon_bind',false);
 ```
 
-Line **519** : Add' cn', 'sn' to ensure uniqueness of user name：
+Line **519**: Add 'cn', 'sn' to ensure uniqueness of username：
 
 ```shell
 #  $servers->setValue('unique','attrs',array('mail','uid','uidNumber')); 
-# Uncomment and chage it into $servers->setValue('unique','attrs',array('mail','uid','uidNumber','cn','sn'));
+# Comment out and change it into $servers->setValue('unique','attrs',array('mail','uid','uidNumber','cn','sn'));
 ```
 
-Restart the Apache service to let the modified configuration take effect:
+Restart the Apache to let the modified configuration take effect:
 
 ```shell
 systemctl restart httpd
 ```
 
-Now we can enter: "http:// 'your public network IP' /ldapadmin/ " in the browser to get the architecture created in step **5**.
+Now we can enter: "http://your public network IP/ldapadmin/" in the browser to get the architecture created in step **5**.
