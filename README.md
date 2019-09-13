@@ -1,11 +1,66 @@
+Table of Contents
+=================
+* [Account Authentication Service](#account-authentication-service)
+    * [CentOS: OpenLDAP Installation and Configuration](#centos-openldap-installation-and-configuration)
+       * [OpenLDAP Tree Structure](#openldap-tree-structure)
+       * [OpenLADP User Information Collection](#openladp-user-information-collection)
+       * [LDAP Synchronous Conditions](#ldap-synchronous-conditions)
+       * [Shell Scripts](#shell-scripts)
+       * [Firewall Rules](#firewall-rules)
+          * [Inbound Rules](#inbound-rules)
+          * [Outbound Rules](#outbound-rules)
+          * [SELinux Settings](#selinux-settings)
+       * [LDAP Basic Configuration](#ldap-basic-configuration)
+          * [Step 1: install LDAP](#step-1-install-ldap)
+          * [Step 2: Configure the syslog](#step-2-configure-the-syslog)
+          * [Step 3: Configure the Password of Main Manager](#step-3-configure-the-password-of-main-manager)
+          * [Step 4: Import Schemas](#step-4-import-schemas)
+          * [Step 5: Configure the Top-level Domain of LDAP](#step-5-configure-the-top-level-domain-of-ldap)
+       * [Multi-Master Replication Configuration](#multi-master-replication-configuration)
+          * [Step 1: Configure the Syncprov module](#step-1-configure-the-syncprov-module)
+          * [Step 2: Configure Mirror Replication](#step-2-configure-mirror-replication)
+          * [Step 3: Enable syncprov module](#step-3-enable-syncprov-module)
+          * [Step 4: Configure Mirror Database](#step-4-configure-mirror-database)
+          * [Step 5: Clone the Structure of Organization](#step-5-clone-the-structure-of-organization)
+          * [Step 6: Create Secondary Manager](#step-6-create-secondary-manager)
+       * [Master-Slave Configuration](#master-slave-configuration)
+       * [OpenLDAP Test](#openldap-test)
+       * [phpLDAPadmin Configuration](#phpldapadmin-configuration)
+          * [Bind public network IP and host name](#bind-public-network-ip-and-host-name)
+          * [Configure Apache Services](#configure-apache-services)
+          * [Install phpLDAPadmin](#install-phpldapadmin)
+    * [Ubuntu: CAS Installation and Configuration](#ubuntu-cas-installation-and-configuration)
+       * [Apache Tomcat 9 Configuration](#apache-tomcat-9-configuration)
+       * [Step 1: install OpenJDK](#step-1-install-openjdk)
+          * [Step 2: Create Tomcat Account](#step-2-create-tomcat-account)
+          * [Step 3: Install Tomcat](#step-3-install-tomcat)
+          * [Step 4: Create System Unit File](#step-4-create-system-unit-file)
+       * [Nginx Configuration](#nginx-configuration)
+          * [Step 1: Create Nginx Running Account](#step-1-create-nginx-running-account)
+          * [Step 2: Install Dependency Library:](#step-2-install-dependency-library)
+             * [GCC Library](#gcc-library)
+             * [PCRE Library](#pcre-library)
+             * [zlib Library](#zlib-library)
+             * [OpenSSL Library](#openssl-library)
+             * [Sysv-rc-conf Management Package](#sysv-rc-conf-management-package)
+          * [Step 3: Download and Decompress Nginx](#step-3-download-and-decompress-nginx)
+          * [Step 4: Configure HTTP Service](#step-4-configure-http-service)
+          * [Step 5: Install Nginx](#step-5-install-nginx)
+          * [Step 6: Configure Nginx](#step-6-configure-nginx)
+    * [Reference](#reference)
+       * [About OpenLDAP](#about-openldap)
+       * [About CAS](#about-cas)
+         
 # Account Authentication Service
 [![LICENSE](https://img.shields.io/badge/license-AGPLv3-blue)](https://github.com/Hephaest/Simple-Java-Caculator/blob/master/LICENSE)
 [![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.4-brightgreen)](https://www.openldap.org/doc/admin24/)
 [![CAS](https://img.shields.io/badge/CAS-6.0.X-orange)](https://apereo.github.io/cas/6.0.x/)
 
-> This document describes the Single Sign-On based on CAS, helps trainees quickly learn this project achieving agile development.
+English | [中文](README_CN.md)
 
 Latest update: `2019/09/13`
+
+> This document describes the Single Sign-On based on CAS, helps trainees quickly learn this project achieving agile development.
 
 ## CentOS: OpenLDAP Installation and Configuration
 
@@ -658,7 +713,7 @@ ldapmodify -Y EXTERNAL -H ldapi:/// -f olcdatabasehdb.ldif
 
 #### Step 5: Clone the Structure of Organization
 
-Set the directory Structure according to [OpenLDAP Tree Structure](#OpenLDAP Tree Structure).<br>
+Set the directory Structure according to [OpenLDAP Tree Structure](#openldap-tree-structure).<br>
 
 **ONLY** one of LDAP providers needs to execute the following command:
 
