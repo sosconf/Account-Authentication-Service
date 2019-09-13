@@ -952,10 +952,11 @@ systemctl restart httpd
 Now we can enter: ```http://your public network IP/ldapadmin/``` in the browser to get the architecture created in step **5**.
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
 
-## Installing CAS and configuration under Ubuntu
-{- In order to maintain security, please perform following configuration operations with normal user mode -}
-
-System Environment Requirements:
+## Ubuntu: CAS Installation and Configuration
+```diff
+- Given to security, please do not use root account.
+```
+**System Environment Requirements**:
 <div align="center">
 <table class="tg">
   <tr>
@@ -981,13 +982,13 @@ System Environment Requirements:
 </table>
 </div>
 
-### Apache Tomcat 9 configuration 
-### Step 1 install OpenJDK
-Update Current 'apt' Package:
+### Apache Tomcat 9 Configuration 
+### Step 1: install OpenJDK
+Update current 'apt' package:
 ```
 sudo apt update
 ```
-Install Default `Java OpenJDK` Package，11 is current version ，do not install it into Oracle Java.
+Install default `Java OpenJDK` package, **11** is current version (**do not** use Oracle Java).
 ```
 sudo apt install default-jdk
 ```
@@ -996,21 +997,21 @@ Check current JDK version to make sure it meets environment requirements :
 java -version
 ```
 
-#### Step 2 Create Tomcat Account
-Tomcat should not run under the root account for the sake of security issues , we need to create extra system user account.
+#### Step 2: Create Tomcat Account
+Tomcat should not run under the root account for the sake of security issues, we need to create an extra system user account.
 ```
 sudo useradd -r -m -U -d /opt/tomcat -s /bin/false tomcat
 ```
-#### Step 3 Install Tomcat
-Go [Official Website](https://tomcat.apache.org/download-90.cgi)to download Tomcat 9
+#### Step 3: Install Tomcat
+click [this link](https://tomcat.apache.org/download-90.cgi) to download Tomcat 9:
 ```
 wget http://apache.01link.hk/tomcat/tomcat-9/v9.0.24/bin/apache-tomcat-9.0.24.tar.gz -P /tmp
 ```
-Extract the compressed file and move it to the directory of the manager created in the step 2:
+Extract the compressed file and move it to the directory of the manager created in step 2:
 ```
 sudo tar xf /tmp/apache-tomcat-9*.tar.gz -C /opt/tomcat
 ```
-To control Tomcat version better，we need to create a link named `latest` ，and point to installing address of Tomcat directly:
+To control Tomcat version better, we need to create a link named `latest` and point to installing address of Tomcat directly:
 ```
 sudo ln -s /opt/tomcat/apache-tomcat-9.0.24 /opt/tomcat/latest
 ```
@@ -1019,8 +1020,8 @@ Authorize the manager:
 sudo chown -RH tomcat: /opt/tomcat/latest
 sudo sh -c 'chmod +x /opt/tomcat/latest/bin/*.sh'
 ```
-#### Step 4 Create System Unit File
-Create Service Unit:
+#### Step 4: Create System Unit File
+Create service unit:
 ```
 sudo vim /etc/systemd/system/tomcat.service
 ===========================================================
@@ -1047,13 +1048,13 @@ ExecStop=/opt/tomcat/latest/bin/shutdown.sh
 [Install]
 WantedBy=multi-user.target
 ```
-> Please note that if the  path of JAVA_HOME is correct
+> Please check whether the path of JAVA_HOME is correct or not.
 
 Save and restart new unit file :
 ```
 sudo systemctl daemon-reload
 ```
-Next select the listening port, you don't need to enter the port number in ideal situation, but our Tomcat does not run as root for security reasons, so there is no way to achieve port 80 listening by directly changing the port number in the configuration file. So, we need port forwarding via iptables
+Next, select the listening port. You don't need to enter the port number in an ideal situation but Tomcat does not run as root for security reasons, so there is no way to bind on port 80 directly. Hence, we need port forwarding via iptables:
 ```
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 ```
@@ -1065,38 +1066,38 @@ Set boot auto-loader:
 ```
 vim /etc/network/interfaces
 ===========================================================
-# 在末尾追加一行
+# Append a line at the end.
 pre-up iptables-restore < /etc/zsmiptables.rules
 ```
-Start Tomcat Service:
+Start Tomcat service:
 ```
 sudo systemctl start tomcat
 ```
-Please check Tomcat is runnning normally:
+Please check Tomcat is runnning successfully:
 ```
 sudo systemctl status tomcat
 ```
-Green indicates it running normally，set boot automatically:
+Green mark indicates it running successfully, execute reboot command:
 ```
 sudo systemctl enable tomcat
 ```
 ### Nginx Configuration
-#### Step 1 Create Nginx Running Account
-Please do not run Nginx with root privileges due to security concern:
+#### Step 1: Create Nginx Running Account
+Please do not run Nginx by root account due to security concerns:
 ```
 sudo useradd --shell /sbin/nologin --home-dir /usr/local/nginx nginx
 ```
-#### Step 2 Install Dependent Library:
+#### Step 2: Install Dependency Library:
 ##### GCC Library
-gcc would be pre-installed in some systems , we can check whether the library is available in the system environment by the following command:
+gcc would be pre-installed in some systems, we can check whether the library is available in the system environment by the following command:
 ```
 gcc
 ```
-You need to install GCC library If result turns out like this:
+You need to install GCC library If the output is the same as follows:
 ```
 ~bash: gcc: command not found
 ```
-安装的命令为:
+The installation command is shown as follows:
 ```
 sudo apt-get install build-essentials
 ```
@@ -1113,7 +1114,7 @@ sudo apt-get install zlib1g zlib1g-dev
 sudo apt-get install openssl libssl-dev
 ```
 ##### Sysv-rc-conf Management Package
-We prefer change the source in advance in case the installation fails :
+We prefer to change the source in case that installation fails:
 ```
 sudo vim /etc/apt/sources.list
 ===========================================================
@@ -1124,16 +1125,16 @@ Update apt-get:
 ```
 sudo apt-get update
 ```
-Install sysv-rc-conf after upadte :
+Install sysv-rc-conf after updates:
 ```
 sudo apt-get install sysv-rc-conf
 ```
-#### Step3 Download & Decompress Nginx
-Create new directory to store resource :
+#### Step 3: Download and Decompress Nginx
+Create a new directory to store resources:
 ```
 sudo mkdir src && cd src
 ```
-Download suitabele version from [Official Website](http://nginx.org/en/download.html):
+Download a suitable version from [Official Website](http://nginx.org/en/download.html):
 ```
 sudo wget http://nginx.org/download/nginx-1.16.1.tar.gz
 ```
@@ -1141,20 +1142,20 @@ Extract to the desktop and detect the Nginx installation environment:
 ```
 sudo tar xf nginx-1.16.1.tar.gz
 ```
-#### Step 4 Configure HTTP Service
-Configure HTTP 和 HTTPS Server:
+#### Step 4: Configure HTTP Service
+Configure HTTP and HTTPS server:
 ```
 cd nginx-1.16.1 && sudo ./configure --prefix=/usr/local/nginx-1.16.1 --user=nginx --group=nginx --with-http_ssl_module --with-http_gzip_static_module --with-http_stub_status_module
 ```
-#### Step 5 Install Nginx
+#### Step 5: Install Nginx
 ```
 sudo make && sudo make install
 ```
-Construct connection for updating afterwards:
+Create a link:
 ```
 sudo ln -s /usr/local/nginx-1.16.1 /usr/local/nginx
 ```
-Check if modified version is valid:
+Check whether modified version is valid or not:
 ```
 /usr/local/nginx/sbin/nginx -v
 ```
@@ -1162,9 +1163,9 @@ Start Nginx:
 ```
 sudo /usr/local/nginx/sbin/nginx
 ```
-Visit `http://IP address of server public network`，If the browser opens the same as the image below，then the initial configuration of Nginx is successful :
+Visit `http://IP address of server public network`, if the browser opens the same as the image below，then the initial configuration of Nginx is successful:
 
-Next, configure the boot self-starting file :
+Next, configure the self-executing file:
 ```
 sudo vim /etc/init.d/nginx
 ===========================================================
@@ -1224,27 +1225,27 @@ restart)
 esac
 exit 0
 ```
-Authorize script:
+Authorize a script:
 ```
 sudo chmod +x /etc/init.d/nginx
 ```
-Add boot:
+Add boot list:
 ```
 update-rc.d  -f  nginx  defaults
 ```
-It's crucial to turn on the boot:
+This step is crucial for boot from boot:
 ```
 sysv-rc-conf nginx on
 ```
-Access`http://IP of server public network` after reboot，the following information means successful:
+Access `http://IP of server public network` after reboot, the following information indicates a success:
 <div align="center"><img src ="images/Nginx_homepage.png" width = "600px"></div>
 
-The corresponding nginx command turns out:
+The corresponding nginx command as follows:
 ```
 sudo /etc/init.d/nginx reload | stop | restart | start
 ```
-#### Step 6 Configure Nginx
-Edit nginx.conf :
+#### Step 6: Configure Nginx
+Edit nginx.conf:
 ```
 sudo vim /usr/local/nginx/conf/nginx.conf
 ===========================================================
@@ -1367,16 +1368,14 @@ Reload configuration:
 sudo /etc/init.d/nginx reload
 ```
 ## Reference
-This document refers to the blog written by following authors, click to see if you are interested. 
-These blogs have more or less configuration problems, otherwise I don't need to write configuration documents.
-
+This document refers to the blogs written by the following authors, they are listed as follows in case you are interested in. 
 ### About OpenLDAP
-- [配置Linux  NTP instance service](https://help.aliyun.com/document_detail/92803.html?spm=a2c4g.11186623.6.691.39e09c91NxpmTc)
+- [Configure Linux NTP instance service](https://help.aliyun.com/document_detail/92803.html?spm=a2c4g.11186623.6.691.39e09c91NxpmTc)
 - [Installation and Configuration of OpenLDAP under CentOS 7](https://mayanbin.com/post/openldap-in-centos-7.html)
 - [Complete tutorial about building openldap on Centors7](https://blog.csdn.net/weixin_41004350/article/details/89521170)
 - [Enable logging in openldap](https://blog.csdn.net/fanren224/article/details/80532277)
-- [Configure CentOS上OpenLDAP Server using cn=config](https://www.jianshu.com/p/b5df1eb1f4de)
-- [OpenLDAP : OpenLDAP Multi-Master Replication](https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=6)
+- [CentOS: Configure OpenLDAP Server using cn=config](https://www.jianshu.com/p/b5df1eb1f4de)
+- [OpenLDAP: OpenLDAP Multi-Master Replication](https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=6)
 - [Configure OpenLDAP Multi-Master Replication on Linux](https://www.itzgeek.com/how-tos/linux/centos-how-tos/configure-openldap-multi-master-replication-linux.html)
 - [How to Add LDAP Users and Groups in OpenLDAP on Linux](https://www.thegeekstuff.com/2015/02/openldap-add-users-groups/)
 
