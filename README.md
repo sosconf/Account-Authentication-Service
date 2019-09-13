@@ -1,9 +1,6 @@
-# Contents
-================
-[TOC]
 # Account Authentication Service
 [![LICENSE](https://img.shields.io/badge/license-AGPLv3-blue)](https://github.com/Hephaest/Simple-Java-Caculator/blob/master/LICENSE)
-[![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.X-brightgreen)](https://www.openldap.org/doc/admin24/)
+[![LDAP](https://img.shields.io/badge/OpenLDAP-2.4.4-brightgreen)](https://www.openldap.org/doc/admin24/)
 [![CAS](https://img.shields.io/badge/CAS-6.0.X-orange)](https://apereo.github.io/cas/6.0.x/)
 
 > This document describes the Single Sign-On based on CAS, helps trainees quickly learn this project achieving agile development.
