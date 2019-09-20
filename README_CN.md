@@ -84,26 +84,26 @@
   </tr>
   <tr>
     <td class="tg-0pky">master01.hexang.org</td>
-    <td class="tg-0lax">148.70.168.17</td>
-    <td class="tg-0pky">172.27.0.15</td>
+    <td class="tg-0lax">私密信息</td>
+    <td class="tg-0pky">私密信息</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">master02.hexang.org</td>
-    <td class="tg-0lax">120.27.250.20</td>
-    <td class="tg-0pky">172.16.43.45</td>
+    <td class="tg-0lax">私密信息</td>
+    <td class="tg-0pky">私密信息</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">slave01.hexang.org</td>
-    <td class="tg-0lax">106.53.67.32</td>
-    <td class="tg-0pky">172.16.0.14</td>
+    <td class="tg-0lax">私密信息</td>
+    <td class="tg-0pky">私密信息</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">slave02.hexang.org</td>
-    <td class="tg-0lax">47.96.239.221</td>
-    <td class="tg-0pky">172.16.249.253</td>
+    <td class="tg-0lax">私密信息</td>
+    <td class="tg-0pky">私密信息</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
 </table>
