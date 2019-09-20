@@ -85,26 +85,26 @@ We need at least **4** servers to implement the LDAP service (2 as LDAP provider
   </tr>
   <tr>
     <td class="tg-0pky">master01.hexang.org</td>
-    <td class="tg-0lax">152.44.45.194</td>
-    <td class="tg-0pky">\</td>
+    <td class="tg-0lax">Private</td>
+    <td class="tg-0pky">Private</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">master02.hexang.org</td>
-    <td class="tg-0lax">152.44.45.243</td>
-    <td class="tg-0pky">\</td>
+    <td class="tg-0lax">Private</td>
+    <td class="tg-0pky">Private</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">slave01.hexang.org</td>
-    <td class="tg-0lax">152.44.44.247</td>
-    <td class="tg-0pky">\</td>
+    <td class="tg-0lax">Private</td>
+    <td class="tg-0pky">Private</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
   <tr>
     <td class="tg-0pky">slave02.hexang.org</td>
-    <td class="tg-0lax">152.44.45.240</td>
-    <td class="tg-0pky">\</td>
+    <td class="tg-0lax">Private</td>
+    <td class="tg-0pky">Private</td>
     <td class="tg-0pky">CentOS 7.4x86_64</td>
   </tr>
 </table>
@@ -122,12 +122,12 @@ We need at least **4** servers to implement the LDAP service (2 as LDAP provider
   <tr>
     <td class="tg-dvpl">Main manager</td>
     <td class="tg-c3ow">readable, writable</td>
-    <td class="tg-baqh">w8JFUEWjAsHBwLjjcQrCYiPP</td>
+    <td class="tg-baqh">Private</td>
   </tr>
   <tr>
     <td class="tg-dvpl">Secondary manager</td>
     <td class="tg-c3ow">readable</td>
-    <td class="tg-baqh">of2Pwxqt9Gc7TH8e</td>
+    <td class="tg-baqh">Private</td>
   </tr>
 </table>
 </div>
