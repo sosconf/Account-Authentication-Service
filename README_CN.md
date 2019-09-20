@@ -224,7 +224,7 @@ OpenLDAP 的同步模式需要满足以下 **6** 个条件:
     将下方配置复制粘贴即可。
 
 ### 脚本执行文件
-已将可执行 Shell 脚本 上传到[这里](https://hexang.org/sosconf/tech-team/ldap-account-server/tree/master/shell%20scripts)。可通过执行脚本一键配置:<br>
+已将可执行 Shell 脚本 上传到[这里](https://github.com/sosconf/Account-Authentication-Service/tree/master/shell%20scripts)。可通过执行脚本一键配置:<br>
 所有服务器都必须执行第 **1** 步。
 ```
 # 先同步时间并开启 SELinux
