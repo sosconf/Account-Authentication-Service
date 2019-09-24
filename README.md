@@ -1321,6 +1321,7 @@ sysv-rc-conf nginx on
 ```
 Access `http://IP of server public network` after reboot, the following information indicates a success:
 <div align="center"><img src ="images/Nginx_homepage.png" width = "600px"></div>
+
 The corresponding nginx command as follows:
 ```
 sudo /etc/init.d/nginx reload | stop | restart | start
