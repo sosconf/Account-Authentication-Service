@@ -132,7 +132,6 @@
 ### OpenLDAP 目录树示意图
 当前的组织结构比较简单，后期可能会为每一个域名级别的 ou 创建自己的管理团队以便管理和隐私保护:
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
-
 ### OpenLDAP 用户信息收集
 用户信息的收集使用的是 `inetorgperson.ldif` 的 schema，我们将会收集以下数据:
 
@@ -248,7 +247,7 @@ chmod +x Slave_Configuration.sh
 ```
 
 ### 防火墙规则
-    
+
 #### 入战规则
 
 <div align="center">
@@ -783,10 +782,8 @@ service httpd status
 ```
 报绿色就可以放心了，如果是红色检查一下日志，看哪里出错了。
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
-
 我用 Chrome 测试了一下，出现这个说明 Apache 正常运行。
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
-
 #### 安装 phpLDAPadmin
 首先运行安装:
 ```
@@ -844,6 +841,33 @@ systemctl restart httpd
 ```
 现在我们在浏览器里输入: ```http://你的公网IP/ldapadmin/``` 就能获得 第五步 创建的架构了。
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
+如果登录报如下错误：
+
+<div align="center"><img src ="images/unable_to_login.png" width = "600px"></div>
+查看是否是SELinux禁止了LDAP连接：
+
+```
+# getsebool -a | grep httpd #下面是一个被禁止连接的例子
+httpd_anon_write --> off
+httpd_builtin_scripting --> on
+httpd_can_check_spam --> off
+httpd_can_connect_ftp --> off
+httpd_can_connect_ldap --> off
+httpd_can_connect_mythtv --> off
+httpd_can_connect_zabbix --> off
+httpd_can_network_connect --> off
+httpd_can_network_connect_cobbler --> off
+httpd_can_network_connect_db --> off
+......
+```
+
+如果是的话，运行命令打开连接（不需要重启Apache）：
+
+```
+setsebool -P httpd_can_network_connect on
+```
+
+刷新网页，既可登录并查看第五步的配置结果
 
 ## Ubuntu 下 CAS 安装及配置方法
 {- 为了安全考虑，请以普通用户权限进行以下配置操作 -}
@@ -1132,7 +1156,6 @@ sysv-rc-conf nginx on
 ```
 重新启动后访问`http://服务器公网IP`，如显示以下内容则说明操作成功:
 <div align="center"><img src ="images/Nginx_homepage.png" width = "600px"></div>
-
 nginx操作命令从此变为:
 ```
 sudo /etc/init.d/nginx reload | stop | restart | start
