@@ -841,9 +841,11 @@ systemctl restart httpd
 ```
 现在我们在浏览器里输入: ```http://你的公网IP/ldapadmin/``` 就能获得 第五步 创建的架构了。
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
+
 如果登录报如下错误：
 
 <div align="center"><img src ="images/unable_to_login.png" width = "600px"></div>
+
 查看是否是 SELinux 禁止了 LDAP 连接：
 
 ```
