@@ -132,6 +132,7 @@
 ### OpenLDAP 目录树示意图
 当前的组织结构比较简单，后期可能会为每一个域名级别的 ou 创建自己的管理团队以便管理和隐私保护:
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
+
 ### OpenLDAP 用户信息收集
 用户信息的收集使用的是 `inetorgperson.ldif` 的 schema，我们将会收集以下数据:
 
@@ -782,8 +783,10 @@ service httpd status
 ```
 报绿色就可以放心了，如果是红色检查一下日志，看哪里出错了。
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
+
 我用 Chrome 测试了一下，出现这个说明 Apache 正常运行。
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
+
 #### 安装 phpLDAPadmin
 首先运行安装:
 ```
@@ -862,13 +865,10 @@ httpd_can_network_connect_cobbler --> off
 httpd_can_network_connect_db --> off
 ......
 ```
-
 如果是的话，运行命令打开连接（不需要重启 Apache）：
-
 ```
 setsebool -P httpd_can_network_connect on
 ```
-
 刷新网页，既可登录并查看第五步的配置结果
 
 ## Ubuntu 下 CAS 安装及配置方法
@@ -1158,6 +1158,7 @@ sysv-rc-conf nginx on
 ```
 重新启动后访问`http://服务器公网IP`，如显示以下内容则说明操作成功:
 <div align="center"><img src ="images/Nginx_homepage.png" width = "600px"></div>
+
 nginx操作命令从此变为:
 ```
 sudo /etc/init.d/nginx reload | stop | restart | start
