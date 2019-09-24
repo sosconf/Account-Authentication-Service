@@ -137,7 +137,6 @@ We need at least **4** servers to implement the LDAP service (2 as LDAP provider
 The current organizational structure is relatively simple, each domain name level **ou** will create its own administrator due to privacy concerns:
 
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
-
 ### OpenLADP User Information Collection
 
 We use `inetorgperson.ldif` of schemas to collect the user information, the data we need to collect has been listed as follows:
@@ -931,7 +930,6 @@ If the output is the same as follows, that means your Apache is successfully run
 
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
-
 #### Install phpLDAPadmin
 
 Firstly, install phpldapadmin package:
@@ -1006,6 +1004,35 @@ systemctl restart httpd
 
 Now we can enter: ```http://your public network IP/ldapadmin/``` in the browser to get the architecture created in step **5**.
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
+
+If you meet the problem as follow when log in:
+
+<div align="center"><img src ="images/unable_to_login.png" width = "600px"></div>
+
+Check if the SELinux disallows the LDAP connection:
+
+```shell
+# getsebool -a | grep httpd #below is an example of disallow connection
+httpd_anon_write --> off
+httpd_builtin_scripting --> on
+httpd_can_check_spam --> off
+httpd_can_connect_ftp --> off
+httpd_can_connect_ldap --> off
+httpd_can_connect_mythtv --> off
+httpd_can_connect_zabbix --> off
+httpd_can_network_connect --> off
+httpd_can_network_connect_cobbler --> off
+httpd_can_network_connect_db --> off
+......
+```
+
+If so, enable the SELinux network connectivity (it's no need to restart Apache) :
+
+```shell
+setsebool -P httpd_can_network_connect on
+```
+
+Refresh the log in Page, then you can log in successfully.
 
 ## Ubuntu: CAS Installation and Configuration
 ```diff
@@ -1294,7 +1321,6 @@ sysv-rc-conf nginx on
 ```
 Access `http://IP of server public network` after reboot, the following information indicates a success:
 <div align="center"><img src ="images/Nginx_homepage.png" width = "600px"></div>
-
 The corresponding nginx command as follows:
 ```
 sudo /etc/init.d/nginx reload | stop | restart | start
