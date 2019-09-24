@@ -137,6 +137,7 @@ We need at least **4** servers to implement the LDAP service (2 as LDAP provider
 The current organizational structure is relatively simple, each domain name level **ou** will create its own administrator due to privacy concerns:
 
 <div align="center"><img src ="images/LDAP_tree.png" width = "800px"></div>
+
 ### OpenLADP User Information Collection
 
 We use `inetorgperson.ldif` of schemas to collect the user information, the data we need to collect has been listed as follows:
@@ -930,6 +931,7 @@ If the output is the same as follows, that means your Apache is successfully run
 
 <div align="center"><img src ="images/terminal.png" width = "600px"></div>
 <div align="center"><img src ="images/chrome.png" width = "600px"></div>
+
 #### Install phpLDAPadmin
 
 Firstly, install phpldapadmin package:
