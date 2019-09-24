@@ -844,7 +844,7 @@ systemctl restart httpd
 如果登录报如下错误：
 
 <div align="center"><img src ="images/unable_to_login.png" width = "600px"></div>
-查看是否是SELinux禁止了LDAP连接：
+查看是否是 SELinux 禁止了 LDAP 连接：
 
 ```
 # getsebool -a | grep httpd #下面是一个被禁止连接的例子
@@ -861,7 +861,7 @@ httpd_can_network_connect_db --> off
 ......
 ```
 
-如果是的话，运行命令打开连接（不需要重启Apache）：
+如果是的话，运行命令打开连接（不需要重启 Apache）：
 
 ```
 setsebool -P httpd_can_network_connect on

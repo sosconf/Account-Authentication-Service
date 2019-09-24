@@ -1004,13 +1004,14 @@ systemctl restart httpd
 
 Now we can enter: ```http://your public network IP/ldapadmin/``` in the browser to get the architecture created in step **5**.
 <div align="center"><img src ="images/screenrecord.gif" width = "600px"></div>
+
 If you meet the problem as follow when log in:
 
 <div align="center"><img src ="images/unable_to_login.png" width = "600px"></div>
 
-check if the SELinux disallow the LDAP connection:
+Check if the SELinux disallows the LDAP connection:
 
-```
+```shell
 # getsebool -a | grep httpd #below is an example of disallow connection
 httpd_anon_write --> off
 httpd_builtin_scripting --> on
@@ -1027,7 +1028,7 @@ httpd_can_network_connect_db --> off
 
 If so, enable the SELinux network connectivity (it's no need to restart Apache) :
 
-```
+```shell
 setsebool -P httpd_can_network_connect on
 ```
 
